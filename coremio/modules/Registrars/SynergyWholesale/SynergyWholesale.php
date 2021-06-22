@@ -32,10 +32,7 @@
             $password   = Crypt::decode($password,Config::get("crypt/system"));
 
             $sandbox    = (bool)$this->config["settings"]["test-mode"];
-            $this->api  =  new SynergyWholesale_API($sandbox);
-
-            $this->api->set_credentials($username,$password);
-
+            $this->api  =  new SynergyWholesale_API($username, $password, $sandbox);
         }
 
         public function set_order($order=[]){
@@ -47,10 +44,7 @@
             $this->config["settings"]["username"]   = $username;
             $this->config["settings"]["password"]   = $password;
             $this->config["settings"]["test-mode"]  = $sandbox;
-            $this->api = new SynergyWholesale_API($sandbox);
-
-            $this->api->set_credentials($username,$password);
-
+            $this->api = new SynergyWholesale_API($username, $password, $sandbox);
         }
 
 
@@ -181,9 +175,9 @@
             if($type == "domain"){
                 foreach($prices AS $name=>$val){
                     $result[$name] = [
-                        'register' => $val["register"],
+                        'register' => $val["register_1_year"],
                         'transfer' => $val["transfer"],
-                        'renewal'  => $val["renewal"],
+                        'renewal'  => $val["renew"],
                     ];
                 }
             }

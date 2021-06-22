@@ -13,6 +13,13 @@ define('SW_MODULE_NAME', 'synergywholesaledomains');
 define('SW_MODULE_VERSION', '0');
 define('MODULE_VERSION', '0');
 
+function var_dump_str($var) {
+    ob_start();
+    var_dump($var);
+    $result = ob_get_clean();
+    return $result;
+ }
+
 class SynergyWholesale_API
 {
 
@@ -23,9 +30,11 @@ class SynergyWholesale_API
     private $curl           = false;
     private $_params        = [];
 
-    function __construct($test_mode = false)
+    function __construct($resellerID = '', $apiKey = '', $test_mode = false)
     {
         $this->test_mode    = $test_mode;
+        $this->resellerID   = $resellerID;
+        $this->apiKey       = $apiKey;
         $this->curl         = curl_init();
         curl_setopt($this->curl, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)');
         curl_setopt($this->curl, CURLOPT_ENCODING, "gzip");
@@ -33,12 +42,6 @@ class SynergyWholesale_API
         curl_setopt($this->curl, CURLOPT_TIMEOUT, 300);
         curl_setopt($this->curl, CURLOPT_HEADER, 0);
         curl_setopt($this->curl, CURLOPT_HTTPHEADER, array("Content-Type: text/xml; charset=UTF-8"));
-    }
-
-    public function set_credentials($resellerID = '', $apiKey = NULL)
-    {
-        $this->resellerID  = $resellerID;
-        $this->apiKey      = $apiKey;
     }
 
     private function synergywholesaledomains_webRequest($url, $method = 'GET', array $params = [])
@@ -97,7 +100,7 @@ class SynergyWholesale_API
      *
      * @return array
      */
-    function synergywholesaledomains_apiRequest($command, array $params = [], array $request = [], $throw_on_error = false, $force_domain = true)
+    function synergywholesaledomains_apiRequest($command, array $params = [], array $request = [], $throw_on_error = false, $force_domain = false)
     {
         $auth = [
             'apiKey' => $this->apiKey,
@@ -121,7 +124,11 @@ class SynergyWholesale_API
             $request = array_merge($request, $auth);
         }
 
-        if (!isset($request['domainName']) && $force_domain) {
+        // if (!isset($request['domainName']) && $force_domain) {
+        //     $request['domainName'] = $params['sld'] . '.' . $params['tld'];
+        // }
+
+        if (!isset($request['domainName']) && isset($params['sld']) && isset($params['tld'])) {
             $request['domainName'] = $params['sld'] . '.' . $params['tld'];
         }
 
@@ -129,10 +136,10 @@ class SynergyWholesale_API
         $client     = new SoapClient($url, array("trace" => 1, "exception" => 0));
 
         // $client = new \SoapClient(null, [
-        //     'location' => API_ENDPOINT . '/?wsdl',
-        //     'uri' => '',
-        //     'trace' => true,
-        // ]);
+            //     'location' => API_ENDPOINT . '/?wsdl',
+            //     'uri' => '',
+            //     'trace' => true,
+            // ]);
 
         try {
             $response = $client->{$command}($request);
@@ -142,16 +149,16 @@ class SynergyWholesale_API
 
             if ($throw_on_error) {
                 // Convert SOAP Faults to Exceptions
-                throw new \Exception($e->getMessage());
+                throw new \Exception(''.$e->getMessage());
             }
 
-            $this->error = $e->getMessage();
+            $this->error = ''.$e->getMessage();
         }
 
 
         if (!preg_match('/^(OK|AVAILABLE).*?/', $response->status)) {
             if ($throw_on_error) {
-                throw new \Exception($response->errorMessage);
+                throw new \Exception(''.$response->errorMessage);
             }
 
             $this->error = $response->errorMessage;
@@ -162,7 +169,8 @@ class SynergyWholesale_API
 
     public function login()
     {
-        return $this->synergywholesaledomains_apiRequest('balanceQuery', [], [], false, false);
+        $response = $this->synergywholesaledomains_apiRequest('balanceQuery');
+        return $response['status'] == 'OK';
     }
 
     /**
@@ -789,9 +797,10 @@ class SynergyWholesale_API
             ];
         }
 
-        $domain = Capsule::table('tbldomains')
+        $domain = Capsule::table('tldlist')
             ->where('id', $params['domainid'])
             ->first();
+        // Models::$init->db->select("id")->from("tldlist")->where("name","=",params['tld']);
 
         // Sync ID Protection
         if (isset($response['idProtect'])) {
@@ -2276,6 +2285,14 @@ class SynergyWholesale_API
             'Sync' => 'sync_adhoc',
             'Push' => 'push',
         ];
+    }
+
+    function cost_prices() {
+        $response = $this->synergywholesaledomains_apiRequest('getDomainPricing');
+        if ($response['status'] != 'OK') {
+            $this->error = $response['errorMessage'];
+        }
+        return $response['pricing'];
     }
 
     function synergywholesaledomains_sync_adhoc(array $params)
