@@ -1,2 +1,2 @@
-# sample-registrar-module
-Sample domain registrar module for WISECP
+# SynergyWholesale DNS Module
+SynergyWholesale registrar module for WISECP

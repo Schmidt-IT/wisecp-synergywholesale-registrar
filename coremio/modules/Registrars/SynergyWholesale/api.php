@@ -7,7 +7,8 @@
 define('API_ENDPOINT', 'https://api.synergywholesale.com/');
 define('FRONTEND', 'https://manage.synergywholesale.com');
 define('WHOIS_URL', 'https://manage.synergywholesale.com/home/whmcs-whois-json');
-define('WHATS_MY_IP_URL', 'https://manage.synergywholesale.com/ip');
+// define('WHATS_MY_IP_URL', 'https://manage.synergywholesale.com/ip');
+define('WHATS_MY_IP_URL', 'https://ip.seby.io');
 define('SW_MODULE_NAME', 'synergywholesaledomains');
 define('SW_MODULE_VERSION', '0');
 define('MODULE_VERSION', '0');
@@ -157,6 +158,11 @@ class SynergyWholesale_API
         }
 
         return get_object_vars($response);
+    }
+
+    public function login()
+    {
+        return $this->synergywholesaledomains_apiRequest('balanceQuery', [], [], false, false);
     }
 
     /**
@@ -313,7 +319,8 @@ class SynergyWholesale_API
             ],
         ];
 
-        if (isset($params['test_api_connection']) && 'on' === $params['test_api_connection']) {
+        if (isset($this->test_mode) && '1' === $this->test_mode) {
+            $params['test_api_connection'] = 'on';
             try {
                 $ipAddress = $this->synergywholesaledomains_webRequest(WHATS_MY_IP_URL);
             } catch (\Exception $e) {

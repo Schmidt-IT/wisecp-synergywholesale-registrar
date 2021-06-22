@@ -4,14 +4,13 @@
     $lang           = $module->lang;
     $config         = $module->config;
 
-    $username       = Filter::init("POST/auth-userid","numbers");
+    $username       = Filter::init("POST/username","hclear");
     $password       = Filter::init("POST/password","hclear");
     $whidden_amount = (float) Filter::init("POST/whidden-amount","amount");
     $whidden_curr   = (int) Filter::init("POST/whidden-currency","numbers");
     $test_mode      = (int) Filter::init("POST/test-mode","numbers");
     $adp            = (bool) (int) Filter::init("POST/adp","numbers");
     $cost_cid       = (int) Filter::init("POST/cost-currency","numbers");
-
 
     if($password && $password != "*****") $password = Crypt::encode($password,Config::get("crypt/system"));
 

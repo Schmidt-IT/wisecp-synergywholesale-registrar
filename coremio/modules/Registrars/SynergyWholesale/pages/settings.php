@@ -111,7 +111,7 @@ function SynergyWholesale_open_tab(elem, tabName){
                     <span class="kinfo"><?php echo $LANG["desc"]["import-tld-1"]; ?></span>
                 </div>
             </div>
-            
+
 
             <div class="clear"></div>
             <br>
@@ -245,68 +245,7 @@ function SynergyWholesale_open_tab(elem, tabName){
 
             });
         </script>
-        <form action="<?php echo Controllers::$init->getData("links")["controller"]; ?>" method="post" id="SynergyWholesaleImport">
-            <input type="hidden" name="operation" value="module_controller">
-            <input type="hidden" name="module" value="SynergyWholesale">
-            <input type="hidden" name="controller" value="import">
 
-            <table width="100%" id="SynergyWholesale_list_domains" class="table table-striped table-borderedx table-condensed nowrap">
-                <thead style="background:#ebebeb;">
-                <tr>
-                    <th align="center" data-orderable="false">#</th>
-                    <th align="left" data-orderable="false"><?php echo __("admin/products/hosting-shared-servers-import-accounts-domain"); ?></th>
-                    <th align="center" data-orderable="false"><?php echo __("admin/products/hosting-shared-servers-import-accounts-user"); ?></th>
-                    <th align="center" data-orderable="false"><?php echo __("admin/products/hosting-shared-servers-import-accounts-start"); ?></th>
-                    <th align="center" data-orderable="false"><?php echo __("admin/products/hosting-shared-servers-import-accounts-end"); ?></th>
-                </tr>
-                </thead>
-                <tbody align="center" style="border-top:none;">
-                <?php
-                    $list   = $module->domains();
-                    $i = 0;
-                    if($list){
-                        foreach($list AS $row){
-                            $i++;
-                            ?>
-                            <tr<?php echo isset($row["order_id"]) && $row["order_id"] ? ' style="background: #c2edc2;opacity: 0.7;    filter: alpha(opacity=70);"' : ''; ?>>
-                                <td align="left"><?php echo $i; ?></td>
-                                <td align="left"><?php echo $row["domain"]; ?></td>
-                                <td align="center">
-                                    <?php
-                                        if(isset($row["user_data"]) && $row["user_data"]){
-                                            $user_link = Controllers::$init->AdminCRLink("users-2",['detail',$row["user_data"]["id"]]);
-                                            $user_name           = Utility::short_text($row["user_data"]["full_name"],0,21,true);
-                                            $user_company_name   = Utility::short_text($row["user_data"]["company_name"],0,21,true);
-
-                                            $user_detail         = '<a href="'.$user_link.'" target="_blank"><strong title="'.$row["user_data"]["full_name"].'">'.$user_name.'</strong></a><br><span class="mobcomname" title="'.$row["user_data"]["company_name"].'">'.$user_company_name.'</span>';
-                                            echo $user_detail;
-                                        }else{
-                                            ?>
-                                            <select class="width200 select-user" name="data[<?php echo $row["domain"]; ?>][user_id]"></select>
-                                            <?php
-                                        }
-                                    ?>
-                                </td>
-                                <td align="center">
-                                    <?php echo $row["creation_date"] ? DateManager::format("d/m/Y",$row["creation_date"]) : '-'; ?>
-                                </td>
-                                <td align="center">
-                                    <?php echo $row["end_date"] ? DateManager::format("d/m/Y",$row["end_date"]) : '-'; ?>
-                                </td>
-                            </tr>
-                            <?php
-                        }
-                    }
-                ?>
-                </tbody>
-            </table>
-
-            <div class="clear"></div>
-            <div class="guncellebtn yuzde20" style="float: right;">
-                <a href="javascript:void(0);" id="SynergyWholesale_import_submit" class="gonderbtn mavibtn"><?php echo $LANG["import-button"]; ?></a>
-            </div>
-
-        </form>
 
     </div>
 </div>

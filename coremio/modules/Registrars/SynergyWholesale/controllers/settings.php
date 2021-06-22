@@ -37,7 +37,7 @@
 
     if($cost_cid != $config["settings"]["cost-currency"])
         $sets["settings"]["cost-currency"] = $cost_cid;
-    
+
 
     if(!$module->testConnection(array_replace_recursive($config,$sets)))
         die(Utility::jencode([
