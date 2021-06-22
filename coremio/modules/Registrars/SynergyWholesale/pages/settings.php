@@ -5,8 +5,8 @@
     Helper::Load("Money");
 ?>
 <script type="text/javascript">
-function ExampleRegistrarModule_open_tab(elem, tabName){
-    var owner = "ExampleRegistrarModule_tab";
+function SynergyWholesale_open_tab(elem, tabName){
+    var owner = "SynergyWholesale_tab";
     $("#"+owner+" .modules-tabs-content").css("display","none");
     $("#"+owner+" .modules-tabs .modules-tab-item").removeClass("active");
     $("#"+owner+"-"+tabName).css("display","block");
@@ -14,17 +14,17 @@ function ExampleRegistrarModule_open_tab(elem, tabName){
 }
 </script>
 
-<div id="ExampleRegistrarModule_tab">
+<div id="SynergyWholesale_tab">
     <ul class="modules-tabs">
-        <li><a href="javascript:ExampleRegistrarModule_open_tab(this,'detail');" data-tab="detail" class="modules-tab-item active"><?php echo $LANG["tab-detail"]; ?></a></li>
-        <li><a href="javascript:ExampleRegistrarModule_open_tab(this,'import');" data-tab="import" class="modules-tab-item"><?php echo $LANG["tab-import"]; ?></a></li>
+        <li><a href="javascript:SynergyWholesale_open_tab(this,'detail');" data-tab="detail" class="modules-tab-item active"><?php echo $LANG["tab-detail"]; ?></a></li>
+        <li><a href="javascript:SynergyWholesale_open_tab(this,'import');" data-tab="import" class="modules-tab-item"><?php echo $LANG["tab-import"]; ?></a></li>
     </ul>
 
-    <div id="ExampleRegistrarModule_tab-detail" class="modules-tabs-content" style="display: block">
+    <div id="SynergyWholesale_tab-detail" class="modules-tabs-content" style="display: block">
 
-        <form action="<?php echo Controllers::$init->getData("links")["controller"]; ?>" method="post" id="ExampleRegistrarModuleSettings">
+        <form action="<?php echo Controllers::$init->getData("links")["controller"]; ?>" method="post" id="SynergyWholesaleSettings">
             <input type="hidden" name="operation" value="module_controller">
-            <input type="hidden" name="module" value="ExampleRegistrarModule">
+            <input type="hidden" name="module" value="SynergyWholesale">
             <input type="hidden" name="controller" value="settings">
 
             <div class="formcon">
@@ -63,8 +63,8 @@ function ExampleRegistrarModule_open_tab(elem, tabName){
             <div class="formcon">
                 <div class="yuzde30"><?php echo $LANG["fields"]["test-mode"]; ?></div>
                 <div class="yuzde70">
-                    <input<?php echo $CONFIG["settings"]["test-mode"] ? ' checked' : ''; ?> type="checkbox" name="test-mode" value="1" id="ExampleRegistrarModule_test-mode" class="checkbox-custom">
-                    <label class="checkbox-custom-label" for="ExampleRegistrarModule_test-mode">
+                    <input<?php echo $CONFIG["settings"]["test-mode"] ? ' checked' : ''; ?> type="checkbox" name="test-mode" value="1" id="SynergyWholesale_test-mode" class="checkbox-custom">
+                    <label class="checkbox-custom-label" for="SynergyWholesale_test-mode">
                         <span class="kinfo"><?php echo $LANG["desc"]["test-mode"]; ?></span>
                     </label>
                 </div>
@@ -73,8 +73,8 @@ function ExampleRegistrarModule_open_tab(elem, tabName){
             <div class="formcon">
                 <div class="yuzde30"><?php echo $LANG["fields"]["adp"]; ?></div>
                 <div class="yuzde70">
-                    <input<?php echo $CONFIG["settings"]["adp"] ? ' checked' : ''; ?> type="checkbox" name="adp" value="1" id="ExampleRegistrarModule_adp" class="checkbox-custom">
-                    <label class="checkbox-custom-label" for="ExampleRegistrarModule_adp">
+                    <input<?php echo $CONFIG["settings"]["adp"] ? ' checked' : ''; ?> type="checkbox" name="adp" value="1" id="SynergyWholesale_adp" class="checkbox-custom">
+                    <label class="checkbox-custom-label" for="SynergyWholesale_adp">
                         <span class="kinfo"><?php echo $LANG["desc"]["adp"]; ?></span>
                     </label>
                 </div>
@@ -106,7 +106,7 @@ function ExampleRegistrarModule_open_tab(elem, tabName){
             <div class="formcon">
                 <div class="yuzde30"><?php echo $LANG["fields"]["import-tld"]; ?></div>
                 <div class="yuzde70">
-                    <a class="lbtn" href="javascript:open_modal('ExampleRegistrarModule_import_tld');void 0;"><?php echo $LANG["import-tld-button"]; ?></a>
+                    <a class="lbtn" href="javascript:open_modal('SynergyWholesale_import_tld');void 0;"><?php echo $LANG["import-tld-button"]; ?></a>
                     <div class="clear"></div>
                     <span class="kinfo"><?php echo $LANG["desc"]["import-tld-1"]; ?></span>
                 </div>
@@ -116,41 +116,41 @@ function ExampleRegistrarModule_open_tab(elem, tabName){
             <div class="clear"></div>
             <br>
 
-            <div style="float:left;" class="guncellebtn yuzde30"><a id="ExampleRegistrarModule_testConnect" href="javascript:void(0);" class="lbtn"><i class="fa fa-plug" aria-hidden="true"></i> <?php echo $LANG["test-button"]; ?></a></div>
+            <div style="float:left;" class="guncellebtn yuzde30"><a id="SynergyWholesale_testConnect" href="javascript:void(0);" class="lbtn"><i class="fa fa-plug" aria-hidden="true"></i> <?php echo $LANG["test-button"]; ?></a></div>
 
-            <div style="float:right;" class="guncellebtn yuzde30"><a id="ExampleRegistrarModule_submit" href="javascript:void(0);" class="yesilbtn gonderbtn"><?php echo $LANG["save-button"]; ?></a></div>
+            <div style="float:right;" class="guncellebtn yuzde30"><a id="SynergyWholesale_submit" href="javascript:void(0);" class="yesilbtn gonderbtn"><?php echo $LANG["save-button"]; ?></a></div>
 
         </form>
         <script type="text/javascript">
             $(document).ready(function(){
-                $("#ExampleRegistrarModule_testConnect").click(function(){
-                    $("#ExampleRegistrarModuleSettings input[name=controller]").val("test_connection");
+                $("#SynergyWholesale_testConnect").click(function(){
+                    $("#SynergyWholesaleSettings input[name=controller]").val("test_connection");
                     MioAjaxElement($(this),{
                         waiting_text:waiting_text,
                         progress_text:progress_text,
-                        result:"ExampleRegistrarModule_handler",
+                        result:"SynergyWholesale_handler",
                     });
                 });
 
-                $("#ExampleRegistrarModule_submit").click(function(){
-                    $("#ExampleRegistrarModuleSettings input[name=controller]").val("settings");
+                $("#SynergyWholesale_submit").click(function(){
+                    $("#SynergyWholesaleSettings input[name=controller]").val("settings");
                     MioAjaxElement($(this),{
                         waiting_text:waiting_text,
                         progress_text:progress_text,
-                        result:"ExampleRegistrarModule_handler",
+                        result:"SynergyWholesale_handler",
                     });
                 });
             });
 
-            function ExampleRegistrarModule_handler(result){
+            function SynergyWholesale_handler(result){
                 if(result != ''){
                     var solve = getJson(result);
                     if(solve !== false){
                         if(solve.status == "error"){
                             if(solve.for != undefined && solve.for != ''){
-                                $("#ExampleRegistrarModuleSettings "+solve.for).focus();
-                                $("#ExampleRegistrarModuleSettings "+solve.for).attr("style","border-bottom:2px solid red; color:red;");
-                                $("#ExampleRegistrarModuleSettings "+solve.for).change(function(){
+                                $("#SynergyWholesaleSettings "+solve.for).focus();
+                                $("#SynergyWholesaleSettings "+solve.for).attr("style","border-bottom:2px solid red; color:red;");
+                                $("#SynergyWholesaleSettings "+solve.for).change(function(){
                                     $(this).removeAttr("style");
                                 });
                             }
@@ -166,7 +166,7 @@ function ExampleRegistrarModule_open_tab(elem, tabName){
 
     </div>
 
-    <div id="ExampleRegistrarModule_tab-import" class="modules-tabs-content" style="display: none;">
+    <div id="SynergyWholesale_tab-import" class="modules-tabs-content" style="display: none;">
 
         <div class="blue-info">
             <div class="padding15">
@@ -176,15 +176,15 @@ function ExampleRegistrarModule_open_tab(elem, tabName){
 
         <script type="text/javascript">
 
-            function ExampleRegistrarModule_import_handler(result){
+            function SynergyWholesale_import_handler(result){
                 if(result != ''){
                     var solve = getJson(result);
                     if(solve !== false){
                         if(solve.status == "error"){
                             if(solve.for != undefined && solve.for != ''){
-                                $("#ExampleRegistrarModuleImport "+solve.for).focus();
-                                $("#ExampleRegistrarModuleImport "+solve.for).attr("style","border-bottom:2px solid red; color:red;");
-                                $("#ExampleRegistrarModuleImport "+solve.for).change(function(){
+                                $("#SynergyWholesaleImport "+solve.for).focus();
+                                $("#SynergyWholesaleImport "+solve.for).attr("style","border-bottom:2px solid red; color:red;");
+                                $("#SynergyWholesaleImport "+solve.for).change(function(){
                                     $(this).removeAttr("style");
                                 });
                             }
@@ -202,15 +202,15 @@ function ExampleRegistrarModule_open_tab(elem, tabName){
             }
             $(document).ready(function(){
 
-                $("#ExampleRegistrarModule_import_submit").click(function(){
+                $("#SynergyWholesale_import_submit").click(function(){
                     MioAjaxElement($(this),{
                         waiting_text:waiting_text,
                         progress_text:progress_text,
-                        result:"ExampleRegistrarModule_import_handler",
+                        result:"SynergyWholesale_import_handler",
                     });
                 });
 
-                $('#ExampleRegistrarModule_list_domains').DataTable({
+                $('#SynergyWholesale_list_domains').DataTable({
                     "columnDefs": [
                         {
                             "targets": [0],
@@ -245,12 +245,12 @@ function ExampleRegistrarModule_open_tab(elem, tabName){
 
             });
         </script>
-        <form action="<?php echo Controllers::$init->getData("links")["controller"]; ?>" method="post" id="ExampleRegistrarModuleImport">
+        <form action="<?php echo Controllers::$init->getData("links")["controller"]; ?>" method="post" id="SynergyWholesaleImport">
             <input type="hidden" name="operation" value="module_controller">
-            <input type="hidden" name="module" value="ExampleRegistrarModule">
+            <input type="hidden" name="module" value="SynergyWholesale">
             <input type="hidden" name="controller" value="import">
 
-            <table width="100%" id="ExampleRegistrarModule_list_domains" class="table table-striped table-borderedx table-condensed nowrap">
+            <table width="100%" id="SynergyWholesale_list_domains" class="table table-striped table-borderedx table-condensed nowrap">
                 <thead style="background:#ebebeb;">
                 <tr>
                     <th align="center" data-orderable="false">#</th>
@@ -303,7 +303,7 @@ function ExampleRegistrarModule_open_tab(elem, tabName){
 
             <div class="clear"></div>
             <div class="guncellebtn yuzde20" style="float: right;">
-                <a href="javascript:void(0);" id="ExampleRegistrarModule_import_submit" class="gonderbtn mavibtn"><?php echo $LANG["import-button"]; ?></a>
+                <a href="javascript:void(0);" id="SynergyWholesale_import_submit" class="gonderbtn mavibtn"><?php echo $LANG["import-button"]; ?></a>
             </div>
 
         </form>
@@ -311,11 +311,11 @@ function ExampleRegistrarModule_open_tab(elem, tabName){
     </div>
 </div>
 
-<div id="ExampleRegistrarModule_import_tld" style="display: none;" data-izimodal-title="<?php echo $LANG["fields"]["import-tld"]; ?>">
+<div id="SynergyWholesale_import_tld" style="display: none;" data-izimodal-title="<?php echo $LANG["fields"]["import-tld"]; ?>">
     <script type="text/javascript">
         $(document).ready(function(){
 
-            $("#ExampleRegistrarModule_import_tld_submit").on("click",function(){
+            $("#SynergyWholesale_import_tld_submit").on("click",function(){
                 var request = MioAjax({
                     button_element:this,
                     action:"<?php echo Controllers::$init->getData("links")["controller"]; ?>",
@@ -324,7 +324,7 @@ function ExampleRegistrarModule_open_tab(elem, tabName){
                     progress_text:progress_text,
                     data:{
                         operation: "module_controller",
-                        module: "ExampleRegistrarModule",
+                        module: "SynergyWholesale",
                         controller: "import-tld",
                     }
                 },true,true);
@@ -368,7 +368,7 @@ function ExampleRegistrarModule_open_tab(elem, tabName){
 
         <div align="center">
             <div class="yuzde50">
-                <a class="yesilbtn gonderbtn" href="javascript:void 0;" id="ExampleRegistrarModule_import_tld_submit"><i class="fa fa-check" aria-hidden="true"></i> <?php echo ___("needs/ok"); ?></a>
+                <a class="yesilbtn gonderbtn" href="javascript:void 0;" id="SynergyWholesale_import_tld_submit"><i class="fa fa-check" aria-hidden="true"></i> <?php echo ___("needs/ok"); ?></a>
             </div>
         </div>
 

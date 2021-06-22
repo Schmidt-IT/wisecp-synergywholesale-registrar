@@ -1,11 +1,11 @@
 <?php
 
-    class ExampleRegistrarModule {
+    class SynergyWholesale {
         public $api                = false;
         public $config             = [];
         public $lang               = [];
-        public  $error              = NULL;
-        public  $whidden            = [];
+        public $error              = NULL;
+        public $whidden            = [];
         public $order              = [];
 
         function __construct($args=[]){
@@ -13,7 +13,7 @@
             $this->config   = Modules::Config("Registrars",__CLASS__);
             $this->lang     = Modules::Lang("Registrars",__CLASS__);
 
-            if(!class_exists("ExampleRegistrarModule_API")){
+            if(!class_exists("SynergyWholesale_API")){
                 // Calling API files
                 include __DIR__.DS."api.php";
             }
@@ -25,14 +25,14 @@
                 $this->whidden["currency"] = $whidden_currency;
             }
 
-            // Set API Credentials 
+            // Set API Credentials
 
             $username   = $this->config["settings"]["username"];
             $password   = $this->config["settings"]["password"];
             $password   = Crypt::decode($password,Config::get("crypt/system"));
 
             $sandbox    = (bool)$this->config["settings"]["test-mode"];
-            $this->api  =  new ExampleRegistrarModule_API($sandbox);
+            $this->api  =  new SynergyWholesale_API($sandbox);
 
             $this->api->set_credentials($username,$password);
 
@@ -47,7 +47,7 @@
             $this->config["settings"]["username"]   = $username;
             $this->config["settings"]["password"]   = $password;
             $this->config["settings"]["test-mode"]  = $sandbox;
-            $this->api = new ExampleRegistrarModule_API($sandbox);
+            $this->api = new SynergyWholesale_API($sandbox);
 
             $this->api->set_credentials($username,$password);
 
@@ -71,7 +71,7 @@
                 $this->error = $this->api->error;
                 return false;
             }
-            
+
             return true;
         }
 
@@ -99,40 +99,60 @@
             return $result;
         }
 
+        // Todo contact info
         public function register($domain='',$sld='',$tld='',$year=1,$dns=[],$whois=[],$wprivacy=false){
             $domain   = idn_to_ascii($domain,0,INTL_IDNA_VARIANT_UTS46);
             $sld      = idn_to_ascii($sld,0,INTL_IDNA_VARIANT_UTS46);
 
-            // This result should return if the domain name was registered successfully or was previously registered.
-
-            $returnData = [
-                'status' => "SUCCESS",
-                'config' => [
-                    'entityID' => 1,
-                ],
+            $params = [
+                'domain' => $domain,
+                'sld' => $sld,
+                'tld' => $tld,
+                'regperiod' => $year,
+                'nameServers' => $dns,
+                'whois' => $whois,
+                'idprotection' => $wprivacy
             ];
+
+            // This result should return if the domain name was registered successfully or was previously registered.
+            $returnData = $this->api->synergywholesaledomains_RegisterDomain($params);
 
             if($wprivacy) $rdata["whois_privacy"] = ['status' => true,'message' => NULL];
 
             return $returnData;
         }
 
+        // Todo contact info
         public function transfer($domain='',$sld='',$tld='',$year=1,$dns=[],$whois=[],$wprivacy=false,$eppCode=''){
             $domain   = idn_to_ascii($domain,0,INTL_IDNA_VARIANT_UTS46);
             $sld      = idn_to_ascii($sld,0,INTL_IDNA_VARIANT_UTS46);
 
-            
+            $params = [
+                'domain' => $domain,
+                'sld' => $sld,
+                'tld' => $tld,
+                'regperiod' => $year,
+                'nameServers' => $dns,
+                'whois' => $whois,
+                'idprotection' => $wprivacy,
+                'transfersecret' => $eppCode,
+                'doRenewal' => 'Off',
+                'premiumEnabled' => 'Off',
+                'premiumCost' => ''
+            ];
+
+            $returnData = $this->api->synergywholesaledomains_TransferDomain($params);
 
             // This result should return if the domain name was registered successfully or was previously registered.
 
-            $returnData = [
-                'status' => "SUCCESS",
-                'config' => [
-                    'entityID' => 1,
-                ],
-            ];
+            // $returnData = [
+            //     'status' => "SUCCESS",
+            //     'config' => [
+            //         'entityID' => 1,
+            //     ],
+            // ];
 
-            if($wprivacy) $rdata["whois_privacy"] = ['status' => true,'message' => NULL];
+            if($wprivacy) $returnData["whois_privacy"] = ['status' => true,'message' => NULL];
 
             return $returnData;
         }
@@ -140,8 +160,8 @@
         public function renewal($params=[],$domain='',$sld='',$tld='',$year=1,$oduedate='',$nduedate=''){
             $domain   = idn_to_ascii($domain,0,INTL_IDNA_VARIANT_UTS46);
             $sld      = idn_to_ascii($sld,0,INTL_IDNA_VARIANT_UTS46);
-            
-            
+
+
             // Successful: true, Failed: false
             return true;
         }
@@ -166,7 +186,7 @@
                     ];
                 }
             }
-            
+
             return $result;
         }
 
@@ -235,7 +255,7 @@
 
             return ['ns' => $ns,'ip' => $ip];
         }
-        
+
         public function ModifyCNS($params=[],$old=[],$new_ns='',$new_ip=''){
             $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
 
@@ -260,7 +280,7 @@
                 $this->error = $this->api->error;
                 return false;
             }
-            
+
             return true;
         }
 
@@ -516,7 +536,7 @@
             return $result;
 
         }
-        
+
         public function domains(){
             Helper::Load(["User"]);
 
@@ -559,7 +579,7 @@
 
             return $result;
         }
-        
+
         public function import_domain($data=[]){
             $config     = $this->config;
 
@@ -671,7 +691,7 @@
                 }
                 $imports[] = $order_data["name"]." (#".$insert.")";
             }
-            
+
             if($imports){
                 $adata      = UserManager::LoginData("admin");
                 User::addAction($adata["id"],"alteration","domain-imported",[
