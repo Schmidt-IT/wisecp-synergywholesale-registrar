@@ -18,7 +18,19 @@ function var_dump_str($var) {
     var_dump($var);
     $result = ob_get_clean();
     return $result;
- }
+}
+
+function strlen_check(array $matches, int $subpattern_num, int $i) {
+    $num_matches = count($matches);
+    if ($num_matches == 0 || $num_matches < $subpattern_num) {
+        return 0;
+    }
+    $num_subpattern_matches = count($matches[$subpattern_num]);
+    if ($num_subpattern_matches == 0 || $num_subpattern_matches < $i) {
+        return 0;
+    }
+    return strlen($matches[$subpattern_num][$i]);
+}
 
 class SynergyWholesale_API
 {
@@ -2099,7 +2111,6 @@ class SynergyWholesale_API
     }
 
 
-    // TODO fix {{ Undefined offset: 0 }}
     /**
      * @param  $phoneNumber
      * @param  $country
@@ -2133,19 +2144,19 @@ class SynergyWholesale_API
 
         // See if we can match onto the format 61.404040404
         preg_match_all('/^61\.([2,3,4,7,8]{1})([0-9]{8})$/', $phoneNumber, $result, PREG_PATTERN_ORDER);
-        if (strlen($result[1][0]) > 0 && strlen($result[2][0]) > 0) {
+        if (strlen_check($result, 1, 0) > 0 && strlen_check($result, 2, 0) > 0) {
             // Create new phone number (formatted)
             $phoneNumber = '+61.' . $result[1][0] . $result[2][0];
         }
 
         // Now let'e see if this is a psuedo international phone number for Australia
         preg_match_all('/^61([2,3,4,7,8]{1})([0-9]{8})$|^\+61([2,3,4,7,8]{1})([0-9]{8})$/i', $phoneNumber, $result, PREG_PATTERN_ORDER);
-        if (strlen($result[1][0]) > 0 && strlen($result[2][0]) > 0) {
+        if (strlen_check($result, 1, 0) > 0 && strlen_check($result, 2, 0) > 0) {
             // Create new phone number (formatted)
             $phoneNumber = '+61.' . $result[1][0] . $result[2][0];
             // Return phone number
             return $phoneNumber;
-        } elseif (strlen($result[3][0] > 0) && strlen($result[4][0]) > 0) {
+        } elseif (strlen_check($result, 3, 0 > 0) && strlen_check($result, 4, 0) > 0) {
             // Create new phone number (formatted)
             $phoneNumber = '+61.' . $result[3][0] . $result[4][0];
             // Return phone number
@@ -2154,11 +2165,11 @@ class SynergyWholesale_API
 
         // If it doesn't match any of those, it might be in AU specific phone format
         preg_match_all('/^\(0([2,3,7,8])\)([0-9]{8})|^0([2,3,4,7,8])([0-9]{8})/', $phoneNumber, $result, PREG_PATTERN_ORDER);
-        if (strlen($result[1][0]) > 0 && strlen($result[2][0]) > 0) {
+        if (strlen_check($result, 1, 0) > 0 && strlen_check($result, 2, 0) > 0) {
             // Create the new formatted phone number
             $phoneNumber = '+61.' . $result[1][0] . $result[2][0];
             return $phoneNumber;
-        } elseif (strlen($result[3][0] > 0) && strlen($result[4][0]) > 0) {
+        } elseif (strlen_check($result, 3, 0) > 0 && strlen_check($result, 4, 0) > 0) {
             // Create the new formatted phone number
             $phoneNumber = '+61.' . $result[3][0] . $result[4][0];
             return $phoneNumber;
