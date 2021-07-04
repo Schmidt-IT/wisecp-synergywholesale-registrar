@@ -1108,25 +1108,23 @@ class SynergyWholesale_API
             if (!isset($params['contactdetails'][$whmcs_contact])) {
                 continue;
             }
-
-            $request["{$contactType}_firstname"] = $params['contactdetails'][$whmcs_contact]['First Name'];
-            $request["{$contactType}_lastname"]  = $params['contactdetails'][$whmcs_contact]['Last Name'];
+            $request["{$contactType}_firstname"] = $params['contactdetails'][$whmcs_contact]['FirstName'];
+            $request["{$contactType}_lastname"]  = $params['contactdetails'][$whmcs_contact]['LastName'];
 
             $request["{$contactType}_address"] = [
-                $params['contactdetails'][$whmcs_contact]['Address 1'],
-                $params['contactdetails'][$whmcs_contact]['Address 2'],
-                $params['contactdetails'][$whmcs_contact]['Address 3'],
+                $params['contactdetails'][$whmcs_contact]['AddressLine1'],
+                $params['contactdetails'][$whmcs_contact]['AddressLine2'],
+                // $params['contactdetails'][$whmcs_contact]['AddressLine3'],
             ];
 
-            $request["{$contactType}_email"] = $params['contactdetails'][$whmcs_contact]['Email'];
+            $request["{$contactType}_email"] = $params['contactdetails'][$whmcs_contact]['EMail'];
             $request["{$contactType}_suburb"] = $params['contactdetails'][$whmcs_contact]['City'];
-            $request["{$contactType}_postcode"] = $params['contactdetails'][$whmcs_contact]['Postcode'];
+            $request["{$contactType}_postcode"] = $params['contactdetails'][$whmcs_contact]['ZipCode'];
 
             // Validate the country being specified
             if (!$this->synergywholesaledomains_validateCountry($params['contactdetails'][$whmcs_contact]['Country'])) {
-                return [
-                    'error' => "$whmcs_contact Country must be entered as 2 characters - ISO 3166 Standard. EG. AU",
-                ];
+                $this->error = "$whmcs_contact Country must be entered as 2 characters - ISO 3166 Standard. EG. AU";
+                return false;
             }
 
             $request["{$contactType}_country"] = $params['contactdetails'][$whmcs_contact]['Country'];
@@ -1135,9 +1133,8 @@ class SynergyWholesale_API
                 // It is, so check to see if a valid AU State has been specified
                 $state = $this->synergywholesaledomains_validateAUState($params['contactdetails'][$whmcs_contact]['State']);
                 if (!empty($params['contactdetails'][$whmcs_contact]['State']) && !$state) {
-                    return [
-                        'error' => 'A Valid Australian State Name Must Be Supplied, EG. NSW, VIC',
-                    ];
+                    $this->error = 'A Valid Australian State Name Must Be Supplied, EG. NSW, VIC';
+                    return false;
                 }
 
                 // Yes - store the state
@@ -1151,28 +1148,24 @@ class SynergyWholesale_API
                 $params['contactdetails'][$whmcs_contact]['Phone'],
                 $params['contactdetails'][$whmcs_contact]['Country'],
                 $params['contactdetails'][$whmcs_contact]['State'],
-                $params['contactdetails']['Registrant']['Phone Country Code']
+                $params['contactdetails']['Registrant']['PhoneCountryCode']
             );
 
             $request["{$contactType}_fax"] = $this->synergywholesaledomains_formatPhoneNumber(
                 $params['contactdetails'][$whmcs_contact]['Fax'],
                 $params['contactdetails'][$whmcs_contact]['Country'],
                 $params['contactdetails'][$whmcs_contact]['State'],
-                $params['contactdetails']['Registrant']['Phone Country Code']
+                $params['contactdetails']['Registrant']['FaxCountryCode']
             );
         }
 
         try {
             $this->synergywholesaledomains_apiRequest('updateContact', $params, $request);
-            return [
-                'success' => true,
-            ];
+            return true;
         } catch (\Exception $e) {
             $this->error = $e->getMessage();
+            return false;
 
-            return [
-                'error' => $e->getMessage(),
-            ];
         }
     }
 

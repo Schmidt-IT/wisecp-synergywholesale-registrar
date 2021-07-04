@@ -81,7 +81,10 @@
 
             $servers            = Registrar::whois_server($tlds);
 
+            //$this->error = var_dump_str($servers); return false;
+
             $result = [];
+
             foreach ($tlds AS $t){
                 if(isset($servers[$t]["host"]) && isset($servers[$t]["available_pattern"]))
                     $questioning = Registrar::questioning($sld,$t,$servers[$t]["host"],43,$servers[$t]["available_pattern"]);
@@ -186,11 +189,9 @@
         }
 
         public function NsDetails($params=[]){
-            $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
+            $params['domainName'] = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
 
-            $tmp_params['domainName'] = $domain;
-
-            $details    = $this->api->synergywholesaledomains_getNameservers($tmp_params);
+            $details    = $this->api->synergywholesaledomains_getNameservers($params);
 
             $this->error = var_dump_str($details); return false;
 
@@ -209,22 +210,19 @@
         }
 
         public function ModifyDns($params=[],$dns=[]){
-            // $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
+            $params['domainName'] = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
 
-            // if($dns) foreach($dns AS $i=>$dn) $dns[$i] = idn_to_ascii($dn,0,INTL_IDNA_VARIANT_UTS46);
+            if($dns) foreach($dns AS $i=>$dn) $dns[$i] = idn_to_ascii($dn,0,INTL_IDNA_VARIANT_UTS46);
 
-            // $tmp_params['domainName'] = $domain;
-            // $tmp_params['dns'] = $dns;
+            $params['dns'] = $dns;
 
-            // $modifyDns  = $this->api->    function synergywholesaledomains_SaveDNS($tmp_params);
-            // $this->error = var_dump_str($modifyDns);
-            // if(!$modifyDns){ // status==OK
-            //     $this->error = $this->api->error;
-            //     return false;
-            // }
-            // return true;
-            $this->error = "not supported";
-            return false;
+            $modifyDns  = $this->api->synergywholesaledomains_SaveDNS($params);
+            $this->error = var_dump_str($modifyDns);
+            if(!$modifyDns){ // status==OK
+                $this->error = $this->api->error;
+                return false;
+            }
+            return true;
         }
 
         public function CNSList($params=[]){
@@ -291,15 +289,16 @@
 
 
         public function ModifyWhois($params=[],$whois=[]){
-            $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
-            $params["domainName"] = $domain;
-            $params["contactdetails"] = $whois;
+            $params["domainName"] = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
+            $params["contactdetails"]["Registrant"] = $whois;
+            $params["contactdetails"]["Admin"] = $whois;
+            $params["contactdetails"]["Technical"] = $whois;
+            $params["contactdetails"]["Billing"] = $whois;
 
 
             $modify = $this->api->synergywholesaledomains_SaveContactDetails($params);
-            $this->error = var_dump_str($modify); return false;
 
-            if(!$modify){
+            if(!$modify) {
                 $this->error = $this->api->error;
                 return false;
             }
@@ -323,9 +322,10 @@
 
         public function getTransferLock($params=[]){
             $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
-            $tmp_params['domainName'] = $domain;
+            $params['domainName'] = $domain;
+            $params['tld'] = $domain;
 
-            $details    = $this->api->synergywholesaledomains_GetRegistrarLock($tmp_params);
+            $details    = $this->api->synergywholesaledomains_GetRegistrarLock($params);
             $this->error = var_dump_str($details); return false;
 
             if(!$details){
@@ -350,11 +350,9 @@
         }
 
         public function ModifyTransferLock($params=[],$status=''){
-            $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
+            $params['domainName'] = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
 
-            $tmp_params['domainName'] = $domain;
-
-            $modify     = $this->api->synergywholesaledomains_SaveRegistrarLock($tmp_params,$status == "enable" ? "lockDomain" : "unlockDomain");
+            $modify     = $this->api->synergywholesaledomains_SaveRegistrarLock($params,$status == "enable" ? "lockDomain" : "unlockDomain");
             $this->error = var_dump_str($modify); return false;
             if(!$modify){
                 $this->error = $this->api->error;
@@ -407,11 +405,9 @@
         }
 
         public function getAuthCode($params=[]){
-            $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
+            $params['domainName']     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
 
-            $tmp_params['domainName'] = $domain;
-
-            $details    = $this->api->synergywholesaledomains_GetEPPCode($tmp_params);
+            $details    = $this->api->synergywholesaledomains_GetEPPCode($params);
             $this->error = var_dump_str($details);
             if(!$details){
                 $this->error = $this->api->error;
