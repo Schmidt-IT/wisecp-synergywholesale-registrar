@@ -130,6 +130,10 @@ class SynergyWholesale_API
 
         if (!isset($request['domainName']) && isset($params['sld']) && isset($params['tld'])) {
             $request['domainName'] = $params['sld'] . '.' . $params['tld'];
+        } else if (!isset($request['domainName']) && isset($params['domainName'])) {
+            $request['domainName'] = $params['domainName'];
+        } else if (!isset($request['domainName']) && isset($params['domain'])) {
+            $request['domainName'] = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
         }
 
         $url        = API_ENDPOINT . '/?wsdl';
@@ -140,6 +144,10 @@ class SynergyWholesale_API
             //     'uri' => '',
             //     'trace' => true,
             // ]);
+
+        // if ($throw_on_error) {
+        //     throw new \Exception($command . var_dump_str($request));
+        // }
 
         try {
             $response = $client->{$command}($request);
@@ -1160,12 +1168,11 @@ class SynergyWholesale_API
         }
 
         try {
-            $this->synergywholesaledomains_apiRequest('updateContact', $params, $request);
+            $this->synergywholesaledomains_apiRequest('updateContact', $params, $request, true);
             return true;
         } catch (\Exception $e) {
             $this->error = $e->getMessage();
             return false;
-
         }
     }
 
@@ -2092,6 +2099,7 @@ class SynergyWholesale_API
     }
 
 
+    // TODO fix {{ Undefined offset: 0 }}
     /**
      * @param  $phoneNumber
      * @param  $country
