@@ -103,10 +103,10 @@
                 'domain' => $domain,
                 'sld' => $sld,
                 'tld' => $tld,
-                'regperiod' => $year,
+                'years' => $year,
                 'nameServers' => $dns,
                 'whois' => $whois,
-                'idprotection' => $wprivacy
+                'idProtect' => $wprivacy
             ];
 
             // This result should return if the domain name was registered successfully or was previously registered.
@@ -131,8 +131,8 @@
                 'whois' => $whois,
                 'idprotection' => $wprivacy,
                 'transfersecret' => $eppCode,
-                'doRenewal' => 'Off',
-                'premiumEnabled' => 'Off',
+                'doRenewal' => 1,
+                'premiumEnabled' => 0,
                 'premiumCost' => ''
             ];
 
@@ -162,7 +162,7 @@
         }
 
         public function cost_prices($type='domain'){
-            if(!$this->config["settings"]["adp"]) return false;
+            if(!$this->config["settings"]["adp"]) return false; // please check the box
 
             $prices    = $this->api->cost_prices();
             if(!$prices){
@@ -174,10 +174,10 @@
 
             if($type == "domain"){
                 foreach($prices AS $name=>$val){
-                    $result[$name] = [
-                        'register' => $val["register_1_year"],
-                        'transfer' => $val["transfer"],
-                        'renewal'  => $val["renew"],
+                    $result[$val->tld] = [
+                        'register' => $val->register_1_year,
+                        'transfer' => $val->transfer,
+                        'renewal'  => $val->renew,
                     ];
                 }
             }
@@ -188,7 +188,12 @@
         public function NsDetails($params=[]){
             $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
 
-            $details    = $this->api->get_details($domain);
+            $tmp_params['domainName'] = $domain;
+
+            $details    = $this->api->synergywholesaledomains_getNameservers($tmp_params);
+
+            $this->error = var_dump_str($details); return false;
+
             if(!$details){
                 $this->error = $this->api->error;
                 return false;
@@ -204,17 +209,22 @@
         }
 
         public function ModifyDns($params=[],$dns=[]){
-            $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
+            // $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
 
-            if($dns) foreach($dns AS $i=>$dn) $dns[$i] = idn_to_ascii($dn,0,INTL_IDNA_VARIANT_UTS46);
+            // if($dns) foreach($dns AS $i=>$dn) $dns[$i] = idn_to_ascii($dn,0,INTL_IDNA_VARIANT_UTS46);
 
-            $modifyDns  = $this->api->modify_dns($domain,$dns);
-            if(!$modifyDns){
-                $this->error = $this->api->error;
-                return false;
-            }
+            // $tmp_params['domainName'] = $domain;
+            // $tmp_params['dns'] = $dns;
 
-            return true;
+            // $modifyDns  = $this->api->    function synergywholesaledomains_SaveDNS($tmp_params);
+            // $this->error = var_dump_str($modifyDns);
+            // if(!$modifyDns){ // status==OK
+            //     $this->error = $this->api->error;
+            //     return false;
+            // }
+            // return true;
+            $this->error = "not supported";
+            return false;
         }
 
         public function CNSList($params=[]){
@@ -282,8 +292,13 @@
 
         public function ModifyWhois($params=[],$whois=[]){
             $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
+            $params["domainName"] = $domain;
+            $params["contactdetails"] = $whois;
 
-            $modify = $this->api->modify_contact($domain,$whois);
+
+            $modify = $this->api->synergywholesaledomains_SaveContactDetails($params);
+            $this->error = var_dump_str($modify); return false;
+
             if(!$modify){
                 $this->error = $this->api->error;
                 return false;
@@ -296,6 +311,8 @@
             $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
 
             $details    = $this->api->get_details($domain);
+            $this->error = var_dump_str($details); return false;
+
             if(!$details){
                 $this->error = $this->api->error;
                 return false;
@@ -306,20 +323,25 @@
 
         public function getTransferLock($params=[]){
             $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
+            $tmp_params['domainName'] = $domain;
 
-            $details    = $this->api->get_details($domain);
+            $details    = $this->api->synergywholesaledomains_GetRegistrarLock($tmp_params);
+            $this->error = var_dump_str($details); return false;
+
             if(!$details){
                 $this->error = $this->api->error;
                 return false;
             }
 
-            return $details["transfer_lock"] == "on" ? true : false;
+            return $details == "locked" ? true : false;
         }
 
         public function isInactive($params=[]){
             $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
 
             $details    = $this->api->get_details($domain);
+            $this->error = var_dump_str($details); return false;
+
             if(!$details){
                 $this->error = $this->api->error;
                 return false;
@@ -330,7 +352,10 @@
         public function ModifyTransferLock($params=[],$status=''){
             $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
 
-            $modify     = $this->api->modify_transfer_lock($domain,$status == "enable" ? "locked" : "unlocked");
+            $tmp_params['domainName'] = $domain;
+
+            $modify     = $this->api->synergywholesaledomains_SaveRegistrarLock($tmp_params,$status == "enable" ? "lockDomain" : "unlockDomain");
+            $this->error = var_dump_str($modify); return false;
             if(!$modify){
                 $this->error = $this->api->error;
                 return false;
@@ -341,7 +366,15 @@
         public function modifyPrivacyProtection($params=[],$status=''){
             $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
 
-            $modify = $this->api->modify_whois_privacy($domain,$status == "enable" ? "true" : "false");
+            $params = [
+                'domainName' => $domain,
+                'protectenable' => $status == "enable",
+            ];
+            $params['domainName']=$domain;
+            $params['protectenable'] = $status == "enable";
+
+            $modify = $this->api->synergywholesaledomains_IDProtectToggle($params);
+            $this->error = var_dump_str($modify); return false;
             if(!$modify){
                 $this->error = $this->api->error;
                 return false;
@@ -354,6 +387,7 @@
             $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
 
             $apply = $this->api->purchase_whois_privacy($domain);
+            $this->error = var_dump_str($apply);
             if(!$apply){
                 $this->error = $this->api->error;
                 return false;
@@ -375,27 +409,33 @@
         public function getAuthCode($params=[]){
             $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
 
-            $details    = $this->api->get_details($domain);
+            $tmp_params['domainName'] = $domain;
+
+            $details    = $this->api->synergywholesaledomains_GetEPPCode($tmp_params);
+            $this->error = var_dump_str($details);
             if(!$details){
                 $this->error = $this->api->error;
                 return false;
             }
 
-            $authCode   = $details["AuthCode"];
+            $authCode   = $details["eppcode"];
 
             return $authCode;
         }
 
         public function modifyAuthCode($params=[],$authCode=''){
-            $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
+            $this->error = "not supported";
+            return false;
 
-            $modify         = $this->api->modify_AuthCode($domain,$authCode);
-            if(!$modify){
-                $this->error = $this->api->error;
-                return false;
-            }
+            // $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
 
-            return true;
+            // $modify         = $this->api->modify_AuthCode($domain,$authCode);
+            // if(!$modify){
+            //     $this->error = $this->api->error;
+            //     return false;
+            // }
+
+            // return true;
         }
 
         public function sync($params=[]){
@@ -458,6 +498,9 @@
             $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
 
             $details    = $this->api->get_details($domain);
+
+            $this->error = var_dump_str($details); return false;
+
             if(!$details){
                 $this->error = $this->api->error;
                 return false;
@@ -658,7 +701,6 @@
         public function apply_import_tlds(){
 
             $cost_cid           = $this->config["settings"]["cost-currency"]; // Currency ID
-
             $prices             = $this->cost_prices();
             if(!$prices) return false;
 
