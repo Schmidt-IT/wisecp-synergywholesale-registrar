@@ -250,13 +250,16 @@
             $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
             $ns         = idn_to_ascii($ns,0,INTL_IDNA_VARIANT_UTS46);
 
-            $addCNS = $this->api->add_child_nameserver($domain,$ns,$ip);
-            if(!$addCNS){
-                $this->error = $this->api->error;
-                return false;
-            }
+            $this->error = "addCNS() not supported";
+            return false;
 
-            return ['ns' => $ns,'ip' => $ip];
+            // $addCNS = $this->api->add_child_nameserver($domain,$ns,$ip);
+            // if(!$addCNS){
+            //     $this->error = $this->api->error;
+            //     return false;
+            // }
+
+            // return ['ns' => $ns,'ip' => $ip];
         }
 
         public function ModifyCNS($params=[],$old=[],$new_ns='',$new_ip=''){
@@ -265,26 +268,32 @@
             $old_ns      = idn_to_ascii($old["ns"],0,INTL_IDNA_VARIANT_UTS46);
             $new_ns      = idn_to_ascii($new_ns,0,INTL_IDNA_VARIANT_UTS46);
 
-            $modify     = $this->api->modify_child_nameserver($domain,$old_ns,$new_ns,$new_ip);
-            if(!$modify){
-                $this->error = $this->api->error;
-                return false;
-            }
+            $this->error = "ModifyCNS() not supported";
+            return false;
 
-            return true;
+            // $modify     = $this->api->modify_child_nameserver($domain,$old_ns,$new_ns,$new_ip);
+            // if(!$modify){
+            //     $this->error = $this->api->error;
+            //     return false;
+            // }
+
+            // return true;
         }
 
         public function DeleteCNS($params=[],$ns='',$ip=''){
             $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
             $ns         = idn_to_ascii($ns,0,INTL_IDNA_VARIANT_UTS46);
 
-            $delete     = $this->api->delete_child_nameserver($domain,$ns,$ip);
-            if(!$delete){
-                $this->error = $this->api->error;
-                return false;
-            }
+            $this->error = "DeleteCNS() not supported";
+            return false;
 
-            return true;
+            // $delete     = $this->api->delete_child_nameserver($domain,$ns,$ip);
+            // if(!$delete){
+            //     $this->error = $this->api->error;
+            //     return false;
+            // }
+
+            // return true;
         }
 
 
@@ -294,6 +303,7 @@
             $params["contactdetails"]["Admin"] = $whois;
             $params["contactdetails"]["Technical"] = $whois;
             $params["contactdetails"]["Billing"] = $whois;
+            // $params["appPurpose"] = "P1"; //commercial
 
 
             $modify = $this->api->synergywholesaledomains_SaveContactDetails($params);
@@ -349,15 +359,24 @@
             return $details["status"] !== "active" ? true : false;
         }
 
+        /**
+         * Update transfer lock
+         *
+         * @param params common parameters
+         * @param status enable|disable
+         */
         public function ModifyTransferLock($params=[],$status=''){
             $params['domainName'] = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
 
             $modify     = $this->api->synergywholesaledomains_SaveRegistrarLock($params,$status == "enable" ? "lockDomain" : "unlockDomain");
-            $this->error = var_dump_str($modify); return false;
+
+
             if(!$modify){
                 $this->error = $this->api->error;
+                throw new \Exception(var_dump_str(this->error));
                 return false;
             }
+
             return true;
         }
 
@@ -372,12 +391,12 @@
             $params['protectenable'] = $status == "enable";
 
             $modify = $this->api->synergywholesaledomains_IDProtectToggle($params);
-            $this->error = var_dump_str($modify); return false;
+
             if(!$modify){
                 $this->error = $this->api->error;
                 return false;
             }
-
+            $this->error = var_dump_str($modify); return false;
             return true;
         }
 

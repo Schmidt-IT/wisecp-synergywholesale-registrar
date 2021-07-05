@@ -74,6 +74,7 @@ class SynergyWholesale_API
         if (0 !== curl_errno($curl)) {
             $info = curl_getinfo($curl);
             $this->error = 'Curl error: ' . $info[CURLINFO_RESPONSE_CODE] . ':' . curl_error($curl);
+            return false;
         }
 
         curl_close($curl);
@@ -169,10 +170,11 @@ class SynergyWholesale_API
 
             if ($throw_on_error) {
                 // Convert SOAP Faults to Exceptions
-                throw new \Exception(''.$e->getMessage());
+                throw new \Exception($e->getMessage());
             }
 
-            $this->error = ''.$e->getMessage();
+            $this->error = $e->getMessage();
+            return false;
         }
 
 
@@ -182,6 +184,7 @@ class SynergyWholesale_API
             }
 
             $this->error = $response->errorMessage;
+            return false;
         }
 
         return get_object_vars($response);
@@ -190,6 +193,9 @@ class SynergyWholesale_API
     public function login()
     {
         $response = $this->synergywholesaledomains_apiRequest('balanceQuery');
+        if (!$response) {
+            return false;
+        }
         return $response['status'] == 'OK';
     }
 
@@ -256,18 +262,16 @@ class SynergyWholesale_API
 
                 if ('country' === $destination) {
                     if (!$this->synergywholesaledomains_validateCountry($params[$whmcs_contact . $source])) {
-                        return [
-                            'error' => 'Country must be entered as 2 characters - ISO 3166 Standard. EG. AU',
-                        ];
+                        $this->error =  'Country must be entered as 2 characters - ISO 3166 Standard. EG. AU';
+                        return false;
                     }
                 }
 
                 if ('state' === $destination && 'AU' === $params[$whmcs_contact . 'country']) {
                     $state = $this->synergywholesaledomains_validateAUState($params[$whmcs_contact . 'state']);
                     if (!$state) {
-                        return [
-                            'error' => 'A Valid Australian State Name Must Be Supplied, EG. NSW, VIC',
-                        ];
+                        $this->error = 'A Valid Australian State Name Must Be Supplied, EG. NSW, VIC';
+                        return false;
                     }
 
                     $params[$whmcs_contact . $source] = $state;
@@ -482,12 +486,10 @@ class SynergyWholesale_API
     function synergywholesaledomains_getNameservers(array $params, $include_dns_config = false)
     {
         try {
-            $response = $this->$this->synergywholesaledomains_apiRequest('domainInfo', $params);
+            $response = $this->synergywholesaledomains_apiRequest('domainInfo', $params, [], true);
         } catch (\Exception $e) {
             $this->error = $e->getMessage();
-            return [
-                'error' => $e->getMessage(),
-            ];
+            return false;
         }
 
         $values = [];
@@ -534,15 +536,12 @@ class SynergyWholesale_API
     {
         if (!preg_match('/\.(au|uk)$/i', $params['tld'])) {
             try {
-                $response = $this->$this->synergywholesaledomains_apiRequest('domainInfo', $params);
+                $response = $this->$this->synergywholesaledomains_apiRequest('domainInfo', $params, [], true);
                 $locked = 'clientTransferProhibited' === $response['domain_status'];
                 return $locked ? 'locked' : 'unlocked';
             } catch (\Exception $e) {
-                $this->error = $this->api->error;
-
-                return [
-                    'error' => $e->getMessage(),
-                ];
+                $this->error = $e->getMessage();
+                return false;
             }
         }
 
@@ -559,19 +558,18 @@ class SynergyWholesale_API
     function synergywholesaledomains_SaveRegistrarLock(array $params, $command)
     {
         $locked = $this->synergywholesaledomains_GetRegistrarLock($params);
-        if (is_null($locked)) {
+        if ($locked === false) {
+            return false;
+        } else if (is_null($locked)) {
             $this->error = 'This domain name does not support registrar lock.';
-
-            return [
-                'error' => 'This domain name does not support registrar lock.',
-            ];
+            return false;
         }
         //$command = 'locked' === $locked ? 'unlockDomain' : 'lockDomain';
         if ($locked == 'locked' && $command == 'unlockDomain' || $locked == 'unlocked' && $command == 'lockDomain') {
             return $this->$this->synergywholesaledomains_apiRequest($command, $params, [], false);
         } else {
             // no change needed
-            return;
+            return false;
         }
     }
 
@@ -607,6 +605,9 @@ class SynergyWholesale_API
 
         $eligibility = [];
         $contacts = $this->synergywholesaledomains_helper_getContacts($params, ['registrant_' => '']);
+        if (!$contacts) {
+            return false;
+        }
         $request = array_merge($request, $contacts);
 
         if (preg_match('/\.?au$/', $params['tld'])) {
@@ -686,22 +687,17 @@ class SynergyWholesale_API
         }
 
         try {
-            $this->synergywholesaledomains_apiRequest('domainRegister', $params, $request);
+            $this->synergywholesaledomains_apiRequest('domainRegister', $params, $request, true);
             // $returnData = [
             //     'status' => "SUCCESS",
             //     'config' => [
             //         'entityID' => 1,
             //     ],
             // ];
-            return [
-                'status' => "SUCCESS",
-            ];
+            return true;
         } catch (\Exception $e) {
             $this->error = $e->getMessage();
-
-            return [
-                'error' => $e->getMessage(),
-            ];
+            return false;
         }
     }
 
@@ -716,7 +712,9 @@ class SynergyWholesale_API
     {
         // This is a lazy way of getting the contact data in the format we need.
         $contact = $this->synergywholesaledomains_helper_getContacts($params, ['' => '']);
-
+        if (!$contact) {
+            return false;
+        }
         if (preg_match('/\.uk$/', $params['tld'])) {
             return $this->$this->synergywholesaledomains_apiRequest('transferDomain', $params, $contact, false);
         }
@@ -826,13 +824,10 @@ class SynergyWholesale_API
     {
         // Run the sync command on the domain specified
         try {
-            $response = $this->synergywholesaledomains_apiRequest('domainInfo', $params, [], false);
+            $response = $this->synergywholesaledomains_apiRequest('domainInfo', $params, [], true);
         } catch (\Exception $e) {
             $this->error = $e->getMessage();
-
-            return [
-                'error' => $e->getMessage(),
-            ];
+            return false;
         }
 
         $domain = Capsule::table('tldlist')
@@ -855,7 +850,7 @@ class SynergyWholesale_API
         try {
             $check = $this->synergywholesaledomains_apiRequest('checkDomain', $params, [
                 'command' => 'renew',
-            ]);
+            ], true);
 
             if ($check['premium']) {
                 // Get the currency ID for AUD
@@ -915,6 +910,7 @@ class SynergyWholesale_API
             }
         } catch (\Exception $e) {
             $this->error = $e->getMessage();
+            return false;
         }
 
         if (isset($response['transfer_status'])) {
@@ -957,6 +953,7 @@ class SynergyWholesale_API
                 }
             } catch (\Exception $e) {
                 $this->error = $e->getMessage();
+                return false;
             }
         }
 
@@ -1045,6 +1042,7 @@ class SynergyWholesale_API
             }
         } catch (\Exception $e) {
             $this->error = $e->getMessage();
+            return false;
         }
 
         return $returnData;
@@ -1062,13 +1060,10 @@ class SynergyWholesale_API
     function synergywholesaledomains_TransferSync(array $params)
     {
         try {
-            $response = $this->synergywholesaledomains_apiRequest('domainInfo', $params);
+            $response = $this->synergywholesaledomains_apiRequest('domainInfo', $params, [], true);
         } catch (\Exception $e) {
             $this->error = $e->getMessage();
-
-            return [
-                'error' => $e->getMessage(),
-            ];
+            return false;
         }
 
         if (!isset($response['domain_status'])) {
@@ -1117,6 +1112,23 @@ class SynergyWholesale_API
     function synergywholesaledomains_SaveContactDetails(array $params)
     {
         $request = [];
+        // .US only
+        // P1 Business for profit
+        // P2 Nonprofit
+        // P3 Personal
+        // P4 Educational
+        // P5 Governmental
+        $request['appPurpose'] = $params['appPurpose'] || "";
+        // .US only
+        // C11 US Citizen
+        // C12 Permanent Resident
+        // C21 US Organisation
+        // C31/AU Foreign organisation doing business in US
+        // C32/AU Foreign organisation with US office
+        $request['nexusCategory'] = $params['nexusCategory'] || "";
+        // NZ only
+        $request['nz_privacy'] = $params['nz_privacy'] || false;
+
         $contactTypes = [
             'registrant' => 'Registrant',
             'admin' => 'Admin',
@@ -1245,16 +1257,13 @@ class SynergyWholesale_API
     function synergywholesaledomains_GetEPPCode(array $params)
     {
         try {
-            $eppCode = $this->synergywholesaledomains_apiRequest('domainInfo', $params);
+            $eppCode = $this->synergywholesaledomains_apiRequest('domainInfo', $params, [], true);
             return [
                 'eppcode' => $eppCode['domainPassword'],
             ];
         } catch (\Exception $e) {
             $this->error = $e->getMessage();
-
-            return [
-                'error' => $e->getMessage(),
-            ];
+            return false;
         }
     }
 
@@ -1285,7 +1294,7 @@ class SynergyWholesale_API
         ];
 
         try {
-            $info = $this->synergywholesaledomains_apiRequest('domainInfo', $params);
+            $info = $this->synergywholesaledomains_apiRequest('domainInfo', $params, [], true);
             $vars['dnsConfigType'] = $info['dnsConfig'];
             $vars['icannStatus'] = $info['icannStatus'];
         } catch (\Exception $e) {
@@ -1309,7 +1318,7 @@ class SynergyWholesale_API
                     $vars['dnsConfigType'] = $request['dnsConfigType'] = $_REQUEST['option'];
 
                     try {
-                        $response = $this->synergywholesaledomains_apiRequest('updateNameServers', $params, $request);
+                        $response = $this->synergywholesaledomains_apiRequest('updateNameServers', $params, $request, true);
                     } catch (\Exception $e) {
                         $errors[] = 'Update DNS type failed: ' . $e->getMessage();
                     }
@@ -1318,7 +1327,7 @@ class SynergyWholesale_API
                     try {
                         $response = $this->synergywholesaledomains_apiRequest('updateXXXMembership', [
                             'membershipToken' => $_POST['xxxToken'],
-                        ]);
+                        ], [], true);
                         $vars['info'] = 'Update XXX Membership successful.';
                     } catch (\Exception $e) {
                         $errors[] = 'Update XXX Membership failed: ' . $e->getMessage();
@@ -1326,7 +1335,7 @@ class SynergyWholesale_API
                     break;
                 case 'resendwhoisverif':
                     try {
-                        $response = $this->synergywholesaledomains_apiRequest('resendVerificationEmail', $params, $request);
+                        $response = $this->synergywholesaledomains_apiRequest('resendVerificationEmail', $params, $request, true);
                         $vars['info'] = 'Resend WHOIS Verification Email successfull';
                     } catch (\Exception $e) {
                         $errors[] = 'Resend WHOIS Verification Email failed: ' . $e->getMessage();
@@ -1375,7 +1384,7 @@ class SynergyWholesale_API
                             'digestType' => $_REQUEST['digestType'],
                             'digest' => $_REQUEST['digest'],
                             'keyTag' => $_REQUEST['keyTag'],
-                        ]);
+                        ], true);
 
                         $vars['info'] = 'DNSSEC Record added successfully';
                     } catch (\Exception $e) {
@@ -1386,7 +1395,7 @@ class SynergyWholesale_API
                     try {
                         $delete = $this->synergywholesaledomains_apiRequest('DNSSECRemoveDS', $params, [
                             'UUID' => $_REQUEST['uuid'],
-                        ]);
+                        ], true);
 
                         $vars['info'] = 'DNSSEC Record deleted successfully';
                     } catch (\Exception $e) {
@@ -1459,7 +1468,7 @@ class SynergyWholesale_API
                     try {
                         $this->synergywholesaledomains_apiRequest('deleteHost', $params, [
                             'host' => $ipHost,
-                        ]);
+                        ], true);
                         $vars['info'] = 'Child Host has been successfully deleted';
                     } catch (\Exception $e) {
                         $error[] = 'Unable to delete host record: ' . $e->getMessage();
@@ -1472,7 +1481,7 @@ class SynergyWholesale_API
                             'ipAddress' => [
                                 $_REQUEST['ipRecord'],
                             ],
-                        ]);
+                        ], true);
                     } catch (\Exception $e) {
                         $errors[] = 'There was an error adding the new host: ' . $e->getMessage();
                     }
@@ -1499,7 +1508,7 @@ class SynergyWholesale_API
                             'ipAddress' => [
                                 $_REQUEST['ipRecord'],
                             ],
-                        ]);
+                        ], true);
 
                         $vars['info'] = sprintf(
                             'IP %s successfully %s the child host record',
@@ -1515,7 +1524,7 @@ class SynergyWholesale_API
 
         try {
             $vars['records'] = [];
-            $hosts = $this->synergywholesaledomains_apiRequest('listAllHosts', $params);
+            $hosts = $this->synergywholesaledomains_apiRequest('listAllHosts', $params, [], true);
             foreach ($hosts['hosts'] as $host) {
                 $vars['records'][$host->hostName] = [];
                 foreach ($host->ip as $ipAddress) {
@@ -1614,10 +1623,7 @@ class SynergyWholesale_API
 
         if ('NS' === $request['recordType'] && $request['recordName'] === $request['domainName']) {
             $this->error = 'Cannot add or remove NS records from root domain.';
-
-            return [
-                'error' => 'Cannot add or remove NS records from root domain.'
-            ];
+            return false;
         }
 
         return $this->synergywholesaledomains_apiRequest('addDNSRecord', $params, $request, false);
@@ -1637,12 +1643,10 @@ class SynergyWholesale_API
             $this->synergywholesaledomains_apiRequest('deleteDNSRecord', $params, [
                 'domainName' => $this->synergywholesaledomains_helper_getDomain($params),
                 'recordID' => $record['record_id'],
-            ]);
+            ], true);
         } catch (\Exception $e) {
             $this->error = $e->getMessage();
-            return [
-                'error' => $e->getMessage(),
-            ];
+            return false;
         }
     }
 
@@ -1758,7 +1762,7 @@ class SynergyWholesale_API
                             $this->synergywholesaledomains_apiRequest('updateNameServers', $params, [
                                 'dnsConfigType' => 2,
                                 'nameServers' => $dnsHostingNameservers,
-                            ]);
+                            ], true);
                         } catch (\Exception $e) {
                             return $this->synergywholesaledomains_ajaxResponse(['error' => $e->getMessage()]);
                         }
@@ -1864,7 +1868,7 @@ class SynergyWholesale_API
             switch ($_REQUEST['op']) {
                 case 'getRecords':
                     try {
-                        $forwarders = $this->synergywholesaledomains_apiRequest('listMailForwards', $params);
+                        $forwarders = $this->synergywholesaledomains_apiRequest('listMailForwards', $params, [], true);
                         if (empty($forwarders['forwards'])) {
                             $records['info'] = 'No records exist for this domain name.';
                         } else {
@@ -1899,7 +1903,7 @@ class SynergyWholesale_API
                     try {
                         $this->synergywholesaledomains_apiRequest('deleteMailForward', $params, [
                             'forwardID' => $_REQUEST['record_id'],
-                        ]);
+                        ], true);
 
                         $response['info'] = 'Email forwarder deleted.';
                     } catch (\Exception $e) {
@@ -1948,7 +1952,7 @@ class SynergyWholesale_API
                     }
 
                     try {
-                        $add = $this->synergywholesaledomains_apiRequest('addMailForward', $params, $request);
+                        $add = $this->synergywholesaledomains_apiRequest('addMailForward', $params, $request, true);
                         $response = [
                             'info' => 'Mail forwarder has been created',
                             'recordID' => $add['recordID'],
@@ -1989,7 +1993,7 @@ class SynergyWholesale_API
         $errors = $records = [];
 
         try {
-            $forwarders = $this->synergywholesaledomains_apiRequest('getSimpleURLForwards', $params);
+            $forwarders = $this->synergywholesaledomains_apiRequest('getSimpleURLForwards', $params, [], true);
             if (!empty($forwarders['records'])) {
                 foreach ($forwarders['records'] as $record) {
                     switch ($record->redirectType) {
@@ -2017,7 +2021,7 @@ class SynergyWholesale_API
         }
 
         try {
-            $dns = $this->synergywholesaledomains_apiRequest('listDNSZone', $params);
+            $dns = $this->synergywholesaledomains_apiRequest('listDNSZone', $params, [], true);
             if (!empty($dns['records'])) {
 
                 /**
@@ -2050,11 +2054,8 @@ class SynergyWholesale_API
         }
 
         if (!empty($errors)) {
-            $this->error = $e->getMessage();
-
-            return [
-                'error' => implode('<br>', $errors),
-            ];
+            $this->error = implode('<br>', $errors);
+            return false;
         }
 
         return $records;
@@ -2344,10 +2345,7 @@ class SynergyWholesale_API
                 ->first();
         } catch (\Exception $e) {
             $this->error = $e->getMessage();
-
-            return [
-                'error' => $e->getMessage(),
-            ];
+            return false;
         }
 
         if ('Pending Transfer' === $domainInfo->status) {
@@ -2405,13 +2403,14 @@ class SynergyWholesale_API
                     ->where('id', $params['domainid'])
                     ->update($update);
             } catch (\Exception $e) {
-                $this->error = $e->getMessage();
-                return ['error' => 'Error updating domain; ' . $e->getMessage()];
+                $this->error = 'Error updating domain; ' . $e->getMessage();
+                return false;
             }
         }
 
         if (isset($errorMessage)) {
-            return ['error' => $errorMessage];
+            $this->error = $errorMessage;
+            return false;
         }
 
         global $domainstatus, $nextduedate, $expirydate;
@@ -2532,8 +2531,8 @@ class SynergyWholesale_API
                     ->where('id', $params['domainid'])
                     ->update($update);
             } catch (\Exception $e) {
-                $this->error = $e->getMessage();
-                return ['error' => 'Error updating domain; ' . $e->getMessage()];
+                $this->error = 'Error updating domain; ' . $e->getMessage();
+                return false;
             }
         }
 
