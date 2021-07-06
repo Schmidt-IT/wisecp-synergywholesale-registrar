@@ -373,7 +373,7 @@
 
             if(!$modify){
                 $this->error = $this->api->error;
-                throw new \Exception(var_dump_str(this->error));
+                // throw new \Exception(var_dump_str($this->error));
                 return false;
             }
 
@@ -462,9 +462,9 @@
                 return false;
             }
 
-            $start              = DateManager::format("Y-m-d",$details["creation_date"]);
-            $end                = DateManager::format("Y-m-d",$details["expiration_date"]);
-            $status             = $details["status"];
+            $start              = DateManager::format("Y-m-d",$details["domain_create"]);
+            $end                = DateManager::format("Y-m-d",$details["domain_expiry"]);
+            $status             = $details["domain_status"];
 
             $return_data    = [
                 'creationtime'  => $start,
@@ -472,9 +472,9 @@
                 'status'        => "unknown",
             ];
 
-            if($status == "active"){
+            if($status == "ok" || $status == "clientTransferProhibited"){
                 $return_data["status"] = "active";
-            }elseif($status == "expired")
+            }elseif($status == "inactive" || $status == "pendingDelete")
                 $return_data["status"] = "expired";
 
             return $return_data;
@@ -482,31 +482,7 @@
         }
 
         public function transfer_sync($params=[]){
-            $domain     = idn_to_ascii($params["domain"],0,INTL_IDNA_VARIANT_UTS46);
-
-            $details    = $this->api->get_details($domain);
-            if(!$details){
-                $this->error = $this->api->error;
-                return false;
-            }
-
-            $start              = DateManager::format("Y-m-d",$details["creation_date"]);
-            $end                = DateManager::format("Y-m-d",$details["expiration_date"]);
-            $status             = $details["status"];
-
-            $return_data    = [
-                'creationtime'  => $start,
-                'endtime'       => $end,
-                'status'        => "unknown",
-            ];
-
-            if($status == "active"){
-                $return_data["status"] = "active";
-            }elseif($status == "expired")
-                $return_data["status"] = "expired";
-
-            return $return_data;
-
+            return $this->sync($params);
         }
 
         public function get_info($params=[]){
@@ -523,16 +499,16 @@
 
             $result             = [];
 
-            $cdate              = DateManager::format("Y-m-d",$details["creation_date"]);
-            $duedate            = DateManager::format("Y-m-d",$details["expiration_date"]);
+            $cdate              = DateManager::format("Y-m-d",$details["domain_create"]);
+            $duedate            = DateManager::format("Y-m-d",$details["domain_expiry"]);
 
-            $wprivacy           = $details["is_privacy"] != "none" ? ($OrderDetails["is_privacy"] == "on") : "none";
+            $wprivacy           = $details["idProtect"] != "Disabled" ? ($OrderDetails["idProtect"] == "Enabled") : "none";
             if($wprivacy && $wprivacy != "none"){
                 $wprivacy_endtime_i   = isset($details["privacy_endtime"]) ? $details["privacy_endtime"] : "none";
                 if($wprivacy_endtime_i && $wprivacy_endtime_i != "none")
                     $wprivacy_endtime   = DateManager::format("Y-m-d",$details["privacy_endtime"]);
             }
-
+            // nameServers
             $ns1                = isset($details["ns1"]) ? $details["ns1"] : false;
             $ns2                = isset($details["ns2"]) ? $details["ns2"] : false;
             $ns3                = isset($details["ns3"]) ? $details["ns3"] : false;
@@ -573,7 +549,7 @@
             if(isset($ns4) && $ns4) $result["ns4"] = $ns4;
             if(isset($whois) && $whois) $result["whois"] = $whois;
 
-            $result["transferlock"] = $details["transfer_lock"] == "on";
+            $result["transferlock"] = $details["domain_status"] == "clientTransferProhibited";
 
             if(isset($details["child_nameservers"])){
                 $CNSList = $details["child_nameservers"];
