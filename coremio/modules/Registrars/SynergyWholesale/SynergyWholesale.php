@@ -12,8 +12,8 @@ class SynergyWholesale
     function __construct($args = [])
     {
 
-        $this->config   = Modules::Config("Registrars", __CLASS__);
-        $this->lang     = Modules::Lang("Registrars", __CLASS__);
+        $this->config = Modules::Config("Registrars", __CLASS__);
+        $this->lang = Modules::Lang("Registrars", __CLASS__);
 
         if (!class_exists("SynergyWholesale_API")) {
             // Calling API files
@@ -21,7 +21,7 @@ class SynergyWholesale
         }
 
         if (isset($this->config["settings"]["whidden-amount"])) {
-            $whidden_amount   = $this->config["settings"]["whidden-amount"];
+            $whidden_amount = $this->config["settings"]["whidden-amount"];
             $whidden_currency = $this->config["settings"]["whidden-currency"];
             $this->whidden["amount"] = $whidden_amount;
             $this->whidden["currency"] = $whidden_currency;
@@ -29,12 +29,12 @@ class SynergyWholesale
 
         // Set API Credentials
 
-        $username   = $this->config["settings"]["username"];
-        $password   = $this->config["settings"]["password"];
-        $password   = Crypt::decode($password, Config::get("crypt/system"));
+        $username = $this->config["settings"]["username"];
+        $password = $this->config["settings"]["password"];
+        $password = Crypt::decode($password, Config::get("crypt/system"));
 
-        $sandbox    = (bool)$this->config["settings"]["test-mode"];
-        $this->api  =  new SynergyWholesale_API($username, $password, $sandbox);
+        $sandbox = (bool)$this->config["settings"]["test-mode"];
+        $this->api = new SynergyWholesale_API($username, $password, $sandbox);
     }
 
     public function set_order($order = [])
@@ -45,25 +45,25 @@ class SynergyWholesale
 
     private function setConfig($username, $password, $sandbox)
     {
-        $this->config["settings"]["username"]   = $username;
-        $this->config["settings"]["password"]   = $password;
-        $this->config["settings"]["test-mode"]  = $sandbox;
+        $this->config["settings"]["username"] = $username;
+        $this->config["settings"]["password"] = $password;
+        $this->config["settings"]["test-mode"] = $sandbox;
         $this->api = new SynergyWholesale_API($username, $password, $sandbox);
     }
 
 
     public function testConnection($config = [])
     {
-        $username   = $config["settings"]["username"];
-        $password   = $config["settings"]["password"];
-        $sandbox    = $config["settings"]["test-mode"];
+        $username = $config["settings"]["username"];
+        $password = $config["settings"]["password"];
+        $sandbox = $config["settings"]["test-mode"];
 
         if (!$username || !$password) {
             $this->error = $this->lang["error6"];
             return false;
         }
 
-        $password  = Crypt::decode($password, Config::get("crypt/system"));
+        $password = Crypt::decode($password, Config::get("crypt/system"));
 
         $this->setConfig($username, $password, $sandbox);
 
@@ -85,7 +85,7 @@ class SynergyWholesale
         $sld = idn_to_ascii($sld, 0, INTL_IDNA_VARIANT_UTS46);
         if (!is_array($tlds)) $tlds = [$tlds];
 
-        $servers            = Registrar::whois_server($tlds);
+        $servers = Registrar::whois_server($tlds);
 
         //$this->error = var_dump_str($servers); return false;
 
@@ -105,8 +105,8 @@ class SynergyWholesale
     // Todo contact info
     public function register($domain = '', $sld = '', $tld = '', $year = 1, $dns = [], $whois = [], $wprivacy = false)
     {
-        $domain   = idn_to_ascii($domain, 0, INTL_IDNA_VARIANT_UTS46);
-        $sld      = idn_to_ascii($sld, 0, INTL_IDNA_VARIANT_UTS46);
+        $domain = idn_to_ascii($domain, 0, INTL_IDNA_VARIANT_UTS46);
+        $sld = idn_to_ascii($sld, 0, INTL_IDNA_VARIANT_UTS46);
 
         $params = [
             'domain' => $domain,
@@ -129,8 +129,8 @@ class SynergyWholesale
     public function transfer($domain = '', $sld = '', $tld = '', $year = 1, $dns = [], $whois = [], $wprivacy = false, $eppCode = '')
     {
 
-        $domain   = idn_to_ascii($domain, 0, INTL_IDNA_VARIANT_UTS46);
-        $sld      = idn_to_ascii($sld, 0, INTL_IDNA_VARIANT_UTS46);
+        $domain = idn_to_ascii($domain, 0, INTL_IDNA_VARIANT_UTS46);
+        $sld = idn_to_ascii($sld, 0, INTL_IDNA_VARIANT_UTS46);
 
         $params = [
             'domain' => $domain,
@@ -180,9 +180,18 @@ class SynergyWholesale
 
     public function renewal($params = [], $domain = '', $sld = '', $tld = '', $year = 1, $oduedate = '', $nduedate = '')
     {
-        $domain   = idn_to_ascii($domain, 0, INTL_IDNA_VARIANT_UTS46);
-        $sld      = idn_to_ascii($sld, 0, INTL_IDNA_VARIANT_UTS46);
+        $params['domainName'] = idn_to_ascii($domain, 0, INTL_IDNA_VARIANT_UTS46);
+        $sld = idn_to_ascii($sld, 0, INTL_IDNA_VARIANT_UTS46);
 
+        $params['regperiod'] = $year;
+        $params['premiumEnabled'] = 0;
+        $params['premiumCost'] = '';
+
+        $response = $this->api->synergywholesaledomains_RenewDomain($params);
+        if (!$response) {
+            $this->error = $this->api->error;
+            return false;
+        }
 
         // Successful: true, Failed: false
         return true;
@@ -192,7 +201,7 @@ class SynergyWholesale
     {
         if (!$this->config["settings"]["adp"]) return false; // please check the box
 
-        $prices    = $this->api->cost_prices();
+        $prices = $this->api->cost_prices();
         if (!$prices) {
             $this->error = $this->api->error;
             return false;
@@ -217,7 +226,7 @@ class SynergyWholesale
     {
         $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
-        $details    = $this->api->synergywholesaledomains_getNameservers($params);
+        $details = $this->api->synergywholesaledomains_getNameservers($params);
 
         $this->error = var_dump_str($details);
         return false;
@@ -255,9 +264,9 @@ class SynergyWholesale
 
     public function CNSList($params = [])
     {
-        $domain     = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
+        $domain = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
-        $get_list    = $this->api->get_child_nameservers($domain);
+        $get_list = $this->api->get_child_nameservers($domain);
         if (!$get_list && $this->api->error) {
             $this->error = $this->api->error;
             return false;
@@ -277,8 +286,8 @@ class SynergyWholesale
 
     public function addCNS($params = [], $ns = '', $ip = '')
     {
-        $domain     = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
-        $ns         = idn_to_ascii($ns, 0, INTL_IDNA_VARIANT_UTS46);
+        $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
+        $ns = idn_to_ascii($ns, 0, INTL_IDNA_VARIANT_UTS46);
 
         $this->error = "addCNS() not supported";
         return false;
@@ -294,10 +303,10 @@ class SynergyWholesale
 
     public function ModifyCNS($params = [], $old = [], $new_ns = '', $new_ip = '')
     {
-        $domain     = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
+        $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
-        $old_ns      = idn_to_ascii($old["ns"], 0, INTL_IDNA_VARIANT_UTS46);
-        $new_ns      = idn_to_ascii($new_ns, 0, INTL_IDNA_VARIANT_UTS46);
+        $old_ns = idn_to_ascii($old["ns"], 0, INTL_IDNA_VARIANT_UTS46);
+        $new_ns = idn_to_ascii($new_ns, 0, INTL_IDNA_VARIANT_UTS46);
 
         $this->error = "ModifyCNS() not supported";
         return false;
@@ -313,8 +322,8 @@ class SynergyWholesale
 
     public function DeleteCNS($params = [], $ns = '', $ip = '')
     {
-        $domain     = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
-        $ns         = idn_to_ascii($ns, 0, INTL_IDNA_VARIANT_UTS46);
+        $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
+        $ns = idn_to_ascii($ns, 0, INTL_IDNA_VARIANT_UTS46);
 
         $this->error = "DeleteCNS() not supported";
         return false;
@@ -351,9 +360,8 @@ class SynergyWholesale
 
     public function getWhoisPrivacy($params = [])
     {
-        $domain     = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
-
-        $details    = $this->api->get_details($domain);
+        $domain = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
+        $details = $this->api->get_details($domain);
         $this->error = var_dump_str($details);
         return false;
 
@@ -367,9 +375,9 @@ class SynergyWholesale
 
     public function getTransferLock($params = [])
     {
-        $domain     = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
+        $domain = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
         $params['domainName'] = $domain;
-        $params['tld'] = $domain;
+        $params['tld'] = $domain; // TODO
 
         $details    = $this->api->synergywholesaledomains_GetRegistrarLock($params);
         $this->error = var_dump_str($details);
@@ -385,9 +393,9 @@ class SynergyWholesale
 
     public function isInactive($params = [])
     {
-        $domain     = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
+        $domain = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
-        $details    = $this->api->get_details($domain);
+        $details = $this->api->get_details($domain);
         $this->error = var_dump_str($details);
         return false;
 
@@ -408,7 +416,7 @@ class SynergyWholesale
     {
         $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
-        $modify     = $this->api->synergywholesaledomains_SaveRegistrarLock($params, $status == "enable" ? "lockDomain" : "unlockDomain");
+        $modify = $this->api->synergywholesaledomains_SaveRegistrarLock($params, $status == "enable" ? "lockDomain" : "unlockDomain");
 
 
         if (!$modify) {
@@ -422,12 +430,7 @@ class SynergyWholesale
 
     public function modifyPrivacyProtection($params = [], $status = '')
     {
-        $domain     = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
-
-        $params = [
-            'domainName' => $domain,
-            'protectenable' => $status == "enable",
-        ];
+        $domain = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
         $params['domainName'] = $domain;
         $params['protectenable'] = $status == "enable";
 
@@ -444,7 +447,7 @@ class SynergyWholesale
 
     public function purchasePrivacyProtection($params = [])
     {
-        $domain     = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
+        $domain = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
         $apply = $this->api->purchase_whois_privacy($domain);
         $this->error = var_dump_str($apply);
@@ -471,16 +474,16 @@ class SynergyWholesale
 
     public function getAuthCode($params = [])
     {
-        $params['domainName']     = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
+        $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
-        $details    = $this->api->synergywholesaledomains_GetEPPCode($params);
+        $details = $this->api->synergywholesaledomains_GetEPPCode($params);
         $this->error = var_dump_str($details);
         if (!$details) {
             $this->error = $this->api->error;
             return false;
         }
 
-        $authCode   = $details["eppcode"];
+        $authCode = $details["eppcode"];
 
         return $authCode;
     }
@@ -503,9 +506,9 @@ class SynergyWholesale
 
     public function sync($params = [])
     {
-        $domain     = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
+        $domain = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
-        $details    = $this->api->get_details($domain);
+        $details = $this->api->get_details($domain);
         if (!$details) {
             $this->error = $this->api->error;
             throw new \Exception(var_dump_str($this->error));
@@ -516,7 +519,7 @@ class SynergyWholesale
         $end                = DateManager::format("Y-m-d", $details["domain_expiry"]);
         $status             = $details["domain_status"];
 
-        $return_data    = [
+        $return_data = [
             'creationtime'  => $start,
             'endtime'       => $end,
             'status'        => "unknown",
@@ -537,9 +540,9 @@ class SynergyWholesale
 
     public function get_info($params = [])
     {
-        $domain     = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
+        $domain = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
-        $details    = $this->api->get_details($domain);
+        $details = $this->api->get_details($domain);
 
         $this->error = var_dump_str($details);
         return false;
@@ -549,7 +552,7 @@ class SynergyWholesale
             return false;
         }
 
-        $result             = [];
+        $result = [];
 
         $cdate              = DateManager::format("Y-m-d", $details["domain_create"]);
         $duedate            = DateManager::format("Y-m-d", $details["domain_expiry"]);
@@ -605,8 +608,8 @@ class SynergyWholesale
 
         if (isset($details["child_nameservers"])) {
             $CNSList = $details["child_nameservers"];
-            $cnsx  = [];
-            $i       = 0;
+            $cnsx = [];
+            $i = 0;
             foreach ($CNSList as $k => $v) {
                 $i += 1;
                 $cnsx[$i] = ['ns' => $k, 'ip' => $v];
@@ -619,7 +622,7 @@ class SynergyWholesale
 
     public function import_domain($data = [])
     {
-        $config     = $this->config;
+        $config = $this->config;
 
         $imports = [];
 
@@ -744,13 +747,13 @@ class SynergyWholesale
     public function apply_import_tlds()
     {
 
-        $cost_cid           = $this->config["settings"]["cost-currency"]; // Currency ID
-        $prices             = $this->cost_prices();
+        $cost_cid = $this->config["settings"]["cost-currency"]; // Currency ID
+        $prices = $this->cost_prices();
         if (!$prices) return false;
 
         Helper::Load(["Products", "Money"]);
 
-        $profit_rate        = Config::get("options/domain-profit-rate");
+        $profit_rate = Config::get("options/domain-profit-rate");
 
         foreach ($prices as $name => $val) {
             $api_cost_prices    = [
