@@ -223,19 +223,19 @@ class SynergyWholesale_API
         }
 
         $contactMap = [
-            'firstname' => 'firstname',
-            'lastname' => 'lastname',
+            'firstname' => 'FirstName',
+            'lastname' => 'LastName',
             'address' => [
-                'address1',
-                'address2',
+                'AddressLine1',
+                'AddressLine2',
             ],
-            'suburb' => 'city',
-            'country' => 'country',
-            'state' => 'state',
-            'postcode' => 'postcode',
-            'phone' => 'phonenumber',
-            'email' => 'email',
-            'organisation' => 'companyname',
+            'suburb' => 'City',
+            'country' => 'Country',
+            'state' => 'State',
+            'postcode' => 'ZipCode',
+            'phone' => 'Phone',
+            'email' => 'EMail',
+            'organisation' => 'Company',
         ];
 
         foreach ($contacts as $sw_contact => $whmcs_contact) {
@@ -243,44 +243,43 @@ class SynergyWholesale_API
                 if (is_array($source)) {
                     $request[$sw_contact . $destination] = [];
                     foreach ($source as $key) {
-                        $request[$sw_contact . $destination][] = $params[$whmcs_contact . $key];
+                        $request[$sw_contact . $destination][] = $params['whois'][$whmcs_contact . $key];
                     }
                     continue;
                 }
 
                 if ('phone' === $destination) {
                     $phoneNumber = $this->synergywholesaledomains_formatPhoneNumber(
-                        $params[$whmcs_contact . $source],
-                        $params[$whmcs_contact . 'country'],
-                        $params[$whmcs_contact . 'state'],
-                        $params[$whmcs_contact . 'phonecc']
+                        $params['whois'][$whmcs_contact . $source],
+                        $params['whois'][$whmcs_contact . 'Country'],
+                        $params['whois'][$whmcs_contact . 'State'],
+                        $params['whois'][$whmcs_contact . 'PhoneCountryCode']
                     );
 
-                    $request[$sw_contact . 'phone'] = $phoneNumber;
+                    $request[$sw_contact . 'Phone'] = $phoneNumber;
                     continue;
                 }
 
                 if ('country' === $destination) {
-                    if (!$this->synergywholesaledomains_validateCountry($params[$whmcs_contact . $source])) {
+                    if (!$this->synergywholesaledomains_validateCountry($params['whois'][$whmcs_contact . $source])) {
                         $this->error =  'Country must be entered as 2 characters - ISO 3166 Standard. EG. AU';
                         return false;
                     }
                 }
 
-                if ('state' === $destination && 'AU' === $params[$whmcs_contact . 'country']) {
-                    $state = $this->synergywholesaledomains_validateAUState($params[$whmcs_contact . 'state']);
+                if ('state' === $destination && 'AU' === $params['whois'][$whmcs_contact . 'country']) {
+                    $state = $this->synergywholesaledomains_validateAUState($params['whois'][$whmcs_contact . 'state']);
                     if (!$state) {
                         $this->error = 'A Valid Australian State Name Must Be Supplied, EG. NSW, VIC';
                         return false;
                     }
 
-                    $params[$whmcs_contact . $source] = $state;
+                    $params['whois'][$whmcs_contact . $source] = $state;
                 }
 
-                $request[$sw_contact . $destination] = $params[$whmcs_contact . $source];
+                $request[$sw_contact . $destination] = $params['whois'][$whmcs_contact . $source];
             }
         }
-
         return $request;
     }
 
@@ -716,16 +715,22 @@ class SynergyWholesale_API
             return false;
         }
         if (preg_match('/\.uk$/', $params['tld'])) {
-            return $this->$this->synergywholesaledomains_apiRequest('transferDomain', $params, $contact, false);
+            $response = $this->$this->synergywholesaledomains_apiRequest('transferDomain', $params, $contact);
+            if (!$response) {
+                return false;
+            }
         }
 
         $request = [
-            'authInfo' => $params['transfersecret'],
+            'authInfo' => $params['authInfo'],
             'doRenewal' => $params['doRenewal'],
         ];
 
         if (preg_match('/\.au$/', $params['tld'])) {
-            $canRenew = $this->synergywholesaledomains_apiRequest('domainRenewRequired', $params, $request, false);
+            $canRenew = $this->synergywholesaledomains_apiRequest('domainRenewRequired', $params, $request);
+            if (!$canRenew) {
+                return false;
+            }
             $request['doRenewal'] = (int) ('on' === $params['doRenewal'] && 'OK_RENEWAL' === $canRenew['status']);
         }
 
@@ -733,7 +738,7 @@ class SynergyWholesale_API
          * We don't want to send the idProtect flag with the "can renew"
          * check. So let's append it to the request here.
          */
-        $request['idProtect'] = $params['idprotection'];
+        $request['idProtect'] = $params['idProtect'];
 
         // Merge contact data into request
         $request = array_merge($request, $contact);
@@ -743,7 +748,7 @@ class SynergyWholesale_API
             $request['premium'] = true;
         }
 
-        return $this->synergywholesaledomains_apiRequest('transferDomain', $params, $request, false);
+        return $this->synergywholesaledomains_apiRequest('transferDomain', $params, $request);
     }
 
     /**

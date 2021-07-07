@@ -126,9 +126,9 @@ class SynergyWholesale
         return $returnData;
     }
 
-    // Todo contact info
     public function transfer($domain = '', $sld = '', $tld = '', $year = 1, $dns = [], $whois = [], $wprivacy = false, $eppCode = '')
     {
+
         $domain   = idn_to_ascii($domain, 0, INTL_IDNA_VARIANT_UTS46);
         $sld      = idn_to_ascii($sld, 0, INTL_IDNA_VARIANT_UTS46);
 
@@ -139,14 +139,30 @@ class SynergyWholesale
             'regperiod' => $year,
             'nameServers' => $dns,
             'whois' => $whois,
-            'idprotection' => $wprivacy,
-            'transfersecret' => $eppCode,
+            'idProtect' => $wprivacy,
+            'authInfo' => $eppCode,
             'doRenewal' => 1,
             'premiumEnabled' => 0,
             'premiumCost' => ''
         ];
 
+        $params['whois']['adminFirstName'] = $params['whois']['FirstName'];
+        $params['whois']['adminLastName'] = $params['whois']['LastName'];
+        $params['whois']['adminAddressLine1'] = $params['whois']['AddressLine1'];
+        $params['whois']['adminAddressLine2'] = $params['whois']['AddressLine2'];
+        $params['whois']['adminCity'] = $params['whois']['City'];
+        $params['whois']['adminCountry'] = $params['whois']['Country'];
+        $params['whois']['adminState'] = $params['whois']['State'];
+        $params['whois']['adminZipCode'] = $params['whois']['ZipCode'];
+        $params['whois']['adminPhone'] = $params['whois']['Phone'];
+        $params['whois']['adminEMail'] = $params['whois']['EMail'];
+        $params['whois']['adminCompany'] = $params['whois']['Company'];
+
         $returnData = $this->api->synergywholesaledomains_TransferDomain($params);
+        if (!$returnData) {
+            $this->error = $this->api->error;
+            return false;
+        }
 
         // This result should return if the domain name was registered successfully or was previously registered.
 
