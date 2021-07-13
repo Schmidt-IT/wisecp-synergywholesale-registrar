@@ -765,6 +765,18 @@ class SynergyWholesale_API
     }
 
     /**
+     * Enable ID Protection.
+     *
+     * @param array $params
+     *
+     * @return array
+     */
+    function purchase_whois_privacy(array $params)
+    {
+        return $this->synergywholesaledomains_apiRequest('enableIDProtection', $params, [], false);
+    }
+
+    /**
      * Renew domain name function.
      *
      * @param array $params

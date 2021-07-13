@@ -108,6 +108,9 @@ class SynergyWholesale
         $domain = idn_to_ascii($domain, 0, INTL_IDNA_VARIANT_UTS46);
         $sld = idn_to_ascii($sld, 0, INTL_IDNA_VARIANT_UTS46);
 
+        $additionalfields = [
+            'Registrant Name' => $whois->Name,
+        ]
         $params = [
             'domain' => $domain,
             'sld' => $sld,
@@ -120,6 +123,10 @@ class SynergyWholesale
 
         // This result should return if the domain name was registered successfully or was previously registered.
         $returnData = $this->api->synergywholesaledomains_RegisterDomain($params);
+        if (!$returnData) {
+            $this->error = $this->api->error;
+            return false;
+        }
 
         if ($wprivacy) $rdata["whois_privacy"] = ['status' => true, 'message' => NULL];
 
@@ -430,8 +437,7 @@ class SynergyWholesale
 
     public function modifyPrivacyProtection($params = [], $status = '')
     {
-        $domain = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
-        $params['domainName'] = $domain;
+        $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
         $params['protectenable'] = $status == "enable";
 
         $modify = $this->api->synergywholesaledomains_IDProtectToggle($params);
@@ -440,17 +446,15 @@ class SynergyWholesale
             $this->error = $this->api->error;
             return false;
         }
-        $this->error = var_dump_str($modify);
-        return false;
+
         return true;
     }
 
     public function purchasePrivacyProtection($params = [])
     {
-        $domain = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
+        $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
-        $apply = $this->api->purchase_whois_privacy($domain);
-        $this->error = var_dump_str($apply);
+        $apply = $this->api->purchase_whois_privacy($params);
         if (!$apply) {
             $this->error = $this->api->error;
             return false;
