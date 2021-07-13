@@ -19,7 +19,7 @@ Supported TLDs: https://manage.synergywholesale.com/home/whmcs-whois-json
 
 ```json
     'asn.au,com.au,id.au,net.au,org.au' => [
-        'host' => 'https://mydomain.com/au-tld-check/synergywholesale.php?domain={domain}',
+        'host' => 'https://{MYDOMAIN}/au-tld-check/synergywholesale.php?domain={domain}',
         'available_pattern' => 'Not Found',
     ],
 ```
@@ -31,7 +31,7 @@ Online Version: https://afilias.com.au/get-au/availability-check/
 
 ```json
     'asn.au,com.au,id.au,net.au,org.au' => [
-        'host' => 'https://mydomain.com/au-tld-check/afilias.php?domain={domain}',
+        'host' => 'https://{MYDOMAIN}/au-tld-check/afilias.php?domain={domain}',
         'available_pattern' => 'Not Found',
     ],
 ```

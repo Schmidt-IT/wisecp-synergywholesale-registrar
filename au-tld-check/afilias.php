@@ -41,7 +41,7 @@ while (!@feof($query)) {
 fclose($query);
 
 if (!!stristr($data, 'Not Available')) {
-    echo 'Registered';
+    echo "Registered<br>Whois info at: whois.auda.org.au";
     return;
 } else if (!!stristr($data, 'NOT SUPPORTED')) {
     echo 'NOT SUPPORTED TLD';

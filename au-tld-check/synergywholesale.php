@@ -36,10 +36,10 @@ if ($response === false) {
 }
 
 if (!!stristr($response, "Unavailable")) {
-    echo "Registered";
+    echo "Registered<br>Whois info at: whois.auda.org.au";
     return;
 } else if (!!stristr($response, "Access Denied")) {
-    echo $response;
+    echo "Access Denied";
     return;
 } else if (!!stristr($response, "Available")) {
     echo "Not Found";
