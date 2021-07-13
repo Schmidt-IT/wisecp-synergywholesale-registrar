@@ -33,7 +33,12 @@ if (!$query) {
 }
 
 $data = "";
-fputs($query, $full_domain . "\r\n");
+$writelen = fwrite($query, $full_domain . "\r\n");
+if($writelen === false) {
+    echo 'Unknown';
+    echo "Error: problem writing data to the the socket";
+    return;
+}
 socket_set_timeout($query, $timeout);
 while (!@feof($query)) {
     $data .= @fread($query, 4096);
