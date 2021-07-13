@@ -8,7 +8,11 @@ if (isset($argv[1])) {
 }
 
 $_GET           = filter_var_array($_GET, ["domain" => FILTER_SANITIZE_STRING]);
-$full_domain    = strtolower(trim($_GET["domain"] ?? "auda.org.au"));
+if (!$_GET["domain"]) {
+    echo "Please enter a domain name";
+    return;
+}
+$full_domain    = strtolower(trim($_GET["domain"]));
 $url            = "https://manage.synergywholesale.com/whmcs_availability_checker.php";
 $timeout        = 12.0;
 $data           = http_build_query(["domain" => $full_domain]);
@@ -30,7 +34,6 @@ if ($response === false) {
     echo "Unknown Error";
     return;
 }
-echo $response;
 
 if (!!stristr($response, "Unavailable")) {
     echo "Registered";
@@ -42,4 +45,4 @@ if (!!stristr($response, "Unavailable")) {
     echo "Not Found";
     return;
 }
-echo "Unknown Error";
+echo "Unknown Response";

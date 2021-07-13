@@ -8,9 +8,13 @@ if (isset($argv[1])) {
 }
 
 $_GET           = filter_var_array($_GET, ['domain'=>FILTER_SANITIZE_STRING]);
+if (!$_GET["domain"]) {
+    echo "Please enter a domain name";
+    return;
+}
 $hostname       = "domaincheck.auda.org.au";
 $port           = 43;
-$full_domain    = strtolower(trim($_GET['domain'] ?? 'auda.org.au'));
+$full_domain    = strtolower(trim($_GET['domain']));
 $timeout        = 12;
 
 // https://www.php.net/manual/en/function.fsockopen.php
@@ -46,4 +50,4 @@ if (!!stristr($data, 'Not Available')) {
     echo "Not Found";
     return;
 }
-echo "Unknown Error";
+echo "Unknown Response";
