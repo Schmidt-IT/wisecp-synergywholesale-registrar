@@ -8,7 +8,7 @@ if (isset($argv[1])) {
 }
 
 $_GET           = filter_var_array($_GET, ["domain" => FILTER_SANITIZE_STRING]);
-if (!$_GET["domain"]) {
+if ($_GET && !$_GET["domain"]) {
     echo "Please enter a domain name";
     return;
 }
