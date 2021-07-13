@@ -61,7 +61,7 @@ if (!!stristr($data, "Not Available")) {
 } else if (!!stristr($data, "NOT SUPPORTED")) {
     echo "NOT SUPPORTED TLD";
     return;
-} else if (!!stristr($response, "Available")) {
+} else if (!!stristr($data, "Available")) {
     echo "Not Found";
     return;
 }
