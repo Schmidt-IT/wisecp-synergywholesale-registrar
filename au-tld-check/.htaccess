@@ -1,7 +1,14 @@
 ## Block 'au-tld-check-*.php' Worldwide access so that the files are only available for the server to use.
+## Make sure to edit the server /etc/hosts file: 127.0.0.1 mydomain.com or allow the server public IP address.
 
+# apatche
 Order Deny,Allow
 Deny from all
 Allow from 127.0.0.1
 ## Also allow public IP:
 # Allow from x.x.x.x
+
+# litespeed
+RewriteEngine On
+RewriteCond %{REMOTE_HOST} !^127\.0\.0\.1
+RewriteRule .* - [F]
