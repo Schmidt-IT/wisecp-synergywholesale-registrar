@@ -108,17 +108,35 @@ class SynergyWholesale
         $domain = idn_to_ascii($domain, 0, INTL_IDNA_VARIANT_UTS46);
         $sld = idn_to_ascii($sld, 0, INTL_IDNA_VARIANT_UTS46);
 
-        $additionalfields = [
-            'Registrant Name' => $whois->Name,
-        ]
+        $whois['adminCompany'] = '' IT';
+        $whois['adminFirstName'] = '';
+        $whois['adminLastName'] = ''';
+        $whois['adminEmail'] = '';
+        $whois['adminPhone'] = '';
+        $whois['adminAddressLine1'] = '';
+        $whois['adminAddressLine2'] = '';
+        $whois['adminState'] = 'NSW';
+        $whois['adminCity'] = '';
+        $whois['adminZipCode'] = '';
+        $whois['adminCountry'] = 'AU';
+        $additionalfields = [ // Page 138 / 145
+            'Eligibility Type' => 'Citizen/Resident', // Company/Charity/ Citizen/Resident /Club/Registered Business
+            'Registrant Name' => $whois['Name'], //$whois['Company'], // The name of the registrant according to the registration. This field is required for all .AU registrations and will ONLY be auto filled if the registrationIdentifier is an ABN or ACN
+            // 'Registrant ID Type' => '', //  ABN, ACN, OTHER
+            // 'Registrant ID' => '', // The ABN or ACN of the registrant (if applicable)
+            // 'Eligibility ID Type' => '', // The type of registrationIdentifier provided (when not ABN or ACN)
+            // 'Eligibility ID' => '',
+            // 'Eligibility Name' => '',
+        ];
         $params = [
-            'domain' => $domain,
+            'domainName' => $domain,
             'sld' => $sld,
-            'tld' => $tld,
             'years' => $year,
+            'tld' => $tld,
             'nameServers' => $dns,
             'whois' => $whois,
-            'idProtect' => $wprivacy
+            'idProtect' => $wprivacy,
+            'additionalfields' => $additionalfields
         ];
 
         // This result should return if the domain name was registered successfully or was previously registered.
