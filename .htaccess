@@ -1,4 +1,4 @@
-## Block Worldwide access so that the files are only available for the server to use.
+## Block 'au-tld-check-*.php' Worldwide access so that the files are only available for the server to use.
 
 Order Deny,Allow
 Deny from all
