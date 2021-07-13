@@ -1,0 +1,7 @@
+## Block Worldwide access so that the files are only available for the server to use.
+
+Order Deny,Allow
+Deny from all
+Allow from 127.0.0.1
+## Also allow public IP:
+# Allow from x.x.x.x
