@@ -1,8 +1,8 @@
 # au. domain check
-Copy the php files to your server
 
+1. Copy the php files to your server
 
-WISECP Whois config file: `/coremio/storage/whois-servers.php`
+2. Edit the WISECP Whois config file: `/coremio/storage/whois-servers.php`
 
 I recommend to only select one server from the list below:
 
