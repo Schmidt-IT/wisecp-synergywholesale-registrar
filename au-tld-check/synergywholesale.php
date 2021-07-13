@@ -12,9 +12,10 @@ if ($_GET && !$_GET["domain"]) {
     echo "Please enter a domain name";
     return;
 }
+
 $full_domain    = strtolower(trim($_GET["domain"]));
 $url            = "https://manage.synergywholesale.com/whmcs_availability_checker.php";
-$timeout        = 12.0;
+$timeout        = 20.0;
 $data           = http_build_query(["domain" => $full_domain]);
 
 $options = [
