@@ -256,7 +256,8 @@ class SynergyWholesale_API
                         $params['whois'][$whmcs_contact . 'PhoneCountryCode']
                     );
 
-                    $request[$sw_contact . 'Phone'] = $phoneNumber;
+                    $request[$sw_contact . 'phone'] = $phoneNumber;
+                    $request[$sw_contact . 'fax'] = '';
                     continue;
                 }
 
@@ -602,11 +603,19 @@ class SynergyWholesale_API
             'specialConditionsAgree' => true,
         ];
 
+        $contactTypeMap = [
+            'registrant_' => '',
+            'technical_' => '',
+            'admin_' => '',
+            'billing_' => '',
+        ];
+
         $eligibility = [];
-        $contacts = $this->synergywholesaledomains_helper_getContacts($params, ['registrant_' => '']);
+        $contacts = $this->synergywholesaledomains_helper_getContacts($params, $contactTypeMap);
         if (!$contacts) {
             return false;
         }
+
         $request = array_merge($request, $contacts);
 
         if (preg_match('/\.?au$/', $params['tld'])) {
@@ -684,6 +693,7 @@ class SynergyWholesale_API
             $request['costPrice'] = $params['premiumCost'];
             $request['premium'] = true;
         }
+        // $this->error = (var_dump_str($request['eligibility'])); return false;
 
         try {
             $this->synergywholesaledomains_apiRequest('domainRegister', $params, $request, true);

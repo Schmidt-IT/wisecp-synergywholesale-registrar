@@ -108,26 +108,51 @@ class SynergyWholesale
         $domain = idn_to_ascii($domain, 0, INTL_IDNA_VARIANT_UTS46);
         $sld = idn_to_ascii($sld, 0, INTL_IDNA_VARIANT_UTS46);
 
-        $whois['adminCompany'] = '' IT';
-        $whois['adminFirstName'] = '';
-        $whois['adminLastName'] = ''';
-        $whois['adminEmail'] = '';
-        $whois['adminPhone'] = '';
-        $whois['adminAddressLine1'] = '';
-        $whois['adminAddressLine2'] = '';
-        $whois['adminState'] = 'NSW';
-        $whois['adminCity'] = '';
-        $whois['adminZipCode'] = '';
-        $whois['adminCountry'] = 'AU';
-        $additionalfields = [ // Page 138 / 145
-            'Eligibility Type' => 'Citizen/Resident', // Company/Charity/ Citizen/Resident /Club/Registered Business
-            'Registrant Name' => $whois['Name'], //$whois['Company'], // The name of the registrant according to the registration. This field is required for all .AU registrations and will ONLY be auto filled if the registrationIdentifier is an ABN or ACN
-            // 'Registrant ID Type' => '', //  ABN, ACN, OTHER
-            // 'Registrant ID' => '', // The ABN or ACN of the registrant (if applicable)
-            // 'Eligibility ID Type' => '', // The type of registrationIdentifier provided (when not ABN or ACN)
-            // 'Eligibility ID' => '',
-            // 'Eligibility Name' => '',
-        ];
+        // $whois['adminCompany'] = '' IT';
+        // $whois['adminFirstName'] = '';
+        // $whois['adminLastName'] = ''';
+        // $whois['adminEmail'] = '';
+        // $whois['adminPhone'] = '';
+        // $whois['adminAddressLine1'] = '';
+        // $whois['adminAddressLine2'] = '';
+        // $whois['adminState'] = 'NSW';
+        // $whois['adminCity'] = '';
+        // $whois['adminZipCode'] = '';
+        // $whois['adminCountry'] = 'AU';
+        $additional_fields = [];
+
+        // // Page 138 / 145
+        if (preg_match('/\.?id\.au$/', $tld)) {
+            $additional_fields = [
+                'Eligibility Type' => 'Citizen/Resident',
+                'Registrant Name' => $whois['Name'],
+            ];
+        } else if (preg_match('/\.?com\.au$/', $tld) || preg_match('/\.?org\.au$/', $tld) || preg_match('/\.?net\.au$/', $tld) || preg_match('/\.?asn\.au$/', $tld)) {
+            // Business Number Type (Registrant ID Type when ABN or ACN else Eligibility ID Type)
+            // Business Number (Registrant ID  when ABN or ACN else Eligibility ID)
+            if ($whois['business_number_type'] == 'ABN' || $whois['business_number_type'] == 'ACN') {
+                $additional_fields = [
+                    'Registrant Name' => $whois['Company'],
+                    'Registrant ID' => $whois['business_number'],
+                    'Registrant ID Type' => $whois['business_number_type'],
+                    'Eligibility Type' => $whois['business_type'],
+                ];
+                // if ($whois['business_type'] == 'Sole Trader') {
+                //     $additional_fields['Registrant Name'] = $whois['Name'];
+                // }
+            } else {
+                $additional_fields = [
+                    'Registrant Name' => $whois['Name'],
+                    'Registrant ID' => '',
+                    'Registrant ID Type' => '',
+                    'Eligibility Type' => $whois['business_type'],
+                    'Eligibility Name' => $whois['Company'],
+                    'Eligibility ID' => $whois['business_number'],
+                    'Eligibility ID Type' => $whois['business_number_type'],
+                ];
+            }
+        }
+
         $params = [
             'domainName' => $domain,
             'sld' => $sld,
@@ -136,7 +161,7 @@ class SynergyWholesale
             'nameServers' => $dns,
             'whois' => $whois,
             'idProtect' => $wprivacy,
-            'additionalfields' => $additionalfields
+            'additionalfields' => $additional_fields
         ];
 
         // This result should return if the domain name was registered successfully or was previously registered.
