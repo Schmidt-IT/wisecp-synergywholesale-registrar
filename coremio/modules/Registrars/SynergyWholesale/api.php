@@ -2609,10 +2609,15 @@ class SynergyWholesale_API
         // $request['limit']=500;
         // $request['status']=('ok', 'clienthold', 'dropped','transferredaway', 'deleted', 'inactive', 'clientTransferProhibited','cilentUpdatedProhibited', 'pendingDelete', 'policyDelete', 'redemption', etc.)
         $response = $this->synergywholesaledomains_apiRequest('listDomains');
+        // throw new Exception(var_dump_str($response));
+
         if ($response === false) {
+            throw new Exception($this->error);
             return false;
-        } else if ($response['status'] != 'OK') {
+
+        } if ($response['errorMessage']) {
             $this->error = $response['errorMessage'];
+            throw new Exception($response['errorMessage']);
             return false;
         }
         return $response['domainList'];
