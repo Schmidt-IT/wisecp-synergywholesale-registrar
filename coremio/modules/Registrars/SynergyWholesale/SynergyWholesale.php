@@ -669,6 +669,52 @@ class SynergyWholesale
         return $result;
     }
 
+
+
+    ///// ---- import
+    public function domains(){
+        Helper::Load(["User"]);
+
+        $data = $this->api->get_domains();
+        if(!$data && $this->api->error){
+            $this->error = $this->api->error;
+            return false;
+        }
+
+        $result     = [];
+
+        if($data && is_array($data)){
+            foreach($data AS $res){
+                $cdate      = isset($res["creation_date"]) ? DateManager::format("Y-m-d",$res["creation_date"]) : '';
+                $edate      = isset($res["domain_expiry"]) ? DateManager::format("Y-m-d",$res["domain_expiry"]) : '';
+                $domain     = isset($res["domainName"]) ? $res["domainName"] : '';
+                if($domain){
+                    $domain      = idn_to_utf8($domain,0,INTL_IDNA_VARIANT_UTS46);
+                    $order_id    = 0;
+                    $user_data   = [];
+                    $is_imported = Models::$init->db->select("id,owner_id AS user_id")->from("users_products");
+                    $is_imported->where("type",'=',"domain","&&");
+                    $is_imported->where("name",'=',$domain);
+                    $is_imported = $is_imported->build() ? $is_imported->getAssoc() : false;
+                    if($is_imported){
+                        $order_id   = $is_imported["id"];
+                        $user_data  =  User::getData($is_imported["user_id"],"id,full_name,company_name","array");
+                    }
+
+                    $result[] = [
+                        'domain'            => $domain,
+                        'creation_date'     => $cdate,
+                        'end_date'          => $edate,
+                        'order_id'          => $order_id,
+                        'user_data'        => $user_data,
+                    ];
+                }
+            }
+        }
+
+        return $result;
+    }
+
     public function import_domain($data = [])
     {
         $config = $this->config;

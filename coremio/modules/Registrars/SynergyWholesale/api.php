@@ -2603,6 +2603,20 @@ class SynergyWholesale_API
         ];
     }
 
+    function get_domains() {
+        // paginated request
+        // $request['page']=0;
+        // $request['limit']=500;
+        // $request['status']=('ok', 'clienthold', 'dropped','transferredaway', 'deleted', 'inactive', 'clientTransferProhibited','cilentUpdatedProhibited', 'pendingDelete', 'policyDelete', 'redemption', etc.)
+        $response = $this->synergywholesaledomains_apiRequest('listDomains');
+        if ($response === false) {
+            return false;
+        } else if ($response['status'] != 'OK') {
+            $this->error = $response['errorMessage'];
+            return false;
+        }
+        return $response['domainList'];
+    }
 
     // if (
     //     class_exists('\WHMCS\Domains\DomainLookup\SearchResult') &&

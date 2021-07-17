@@ -5,9 +5,9 @@
     Helper::Load("Money");
 ?>
 
-<form action="<?php echo Controllers::$init->getData("links")["controller"]; ?>" method="post" id="ExampleRegistrarModuleSettings">
+<form action="<?php echo Controllers::$init->getData("links")["controller"]; ?>" method="post" id="SynergyWholesaleModuleSettings">
     <input type="hidden" name="operation" value="module_controller">
-    <input type="hidden" name="module" value="ExampleRegistrarModule">
+    <input type="hidden" name="module" value="SynergyWholesaleModule">
     <input type="hidden" name="controller" value="settings">
 
     <div class="formcon">
@@ -46,8 +46,8 @@
     <div class="formcon">
         <div class="yuzde30"><?php echo $LANG["fields"]["test-mode"]; ?></div>
         <div class="yuzde70">
-            <input<?php echo $CONFIG["settings"]["test-mode"] ? ' checked' : ''; ?> type="checkbox" name="test-mode" value="1" id="ExampleRegistrarModule_test-mode" class="checkbox-custom">
-            <label class="checkbox-custom-label" for="ExampleRegistrarModule_test-mode">
+            <input<?php echo $CONFIG["settings"]["test-mode"] ? ' checked' : ''; ?> type="checkbox" name="test-mode" value="1" id="SynergyWholesaleModule_test-mode" class="checkbox-custom">
+            <label class="checkbox-custom-label" for="SynergyWholesaleModule_test-mode">
                 <span class="kinfo"><?php echo $LANG["desc"]["test-mode"]; ?></span>
             </label>
         </div>
@@ -56,8 +56,8 @@
     <div class="formcon">
         <div class="yuzde30"><?php echo $LANG["fields"]["adp"]; ?></div>
         <div class="yuzde70">
-            <input<?php echo $CONFIG["settings"]["adp"] ? ' checked' : ''; ?> type="checkbox" name="adp" value="1" id="ExampleRegistrarModule_adp" class="checkbox-custom">
-            <label class="checkbox-custom-label" for="ExampleRegistrarModule_adp">
+            <input<?php echo $CONFIG["settings"]["adp"] ? ' checked' : ''; ?> type="checkbox" name="adp" value="1" id="SynergyWholesaleModule_adp" class="checkbox-custom">
+            <label class="checkbox-custom-label" for="SynergyWholesaleModule_adp">
                 <span class="kinfo"><?php echo $LANG["desc"]["adp"]; ?></span>
             </label>
         </div>
@@ -90,41 +90,41 @@
     <div class="clear"></div>
     <br>
 
-    <div style="float:left;" class="guncellebtn yuzde30"><a id="ExampleRegistrarModule_testConnect" href="javascript:void(0);" class="lbtn"><i class="fa fa-plug" aria-hidden="true"></i> <?php echo $LANG["test-button"]; ?></a></div>
+    <div style="float:left;" class="guncellebtn yuzde30"><a id="SynergyWholesaleModule_testConnect" href="javascript:void(0);" class="lbtn"><i class="fa fa-plug" aria-hidden="true"></i> <?php echo $LANG["test-button"]; ?></a></div>
 
-    <div style="float:right;" class="guncellebtn yuzde30"><a id="ExampleRegistrarModule_submit" href="javascript:void(0);" class="yesilbtn gonderbtn"><?php echo $LANG["save-button"]; ?></a></div>
+    <div style="float:right;" class="guncellebtn yuzde30"><a id="SynergyWholesaleModule_submit" href="javascript:void(0);" class="yesilbtn gonderbtn"><?php echo $LANG["save-button"]; ?></a></div>
 
     </form>
     <script type="text/javascript">
     $(document).ready(function(){
-        $("#ExampleRegistrarModule_testConnect").click(function(){
-            $("#ExampleRegistrarModuleSettings input[name=controller]").val("test_connection");
+        $("#SynergyWholesaleModule_testConnect").click(function(){
+            $("#SynergyWholesaleModuleSettings input[name=controller]").val("test_connection");
             MioAjaxElement($(this),{
                 waiting_text:waiting_text,
                 progress_text:progress_text,
-                result:"ExampleRegistrarModule_handler",
+                result:"SynergyWholesaleModule_handler",
             });
         });
 
-        $("#ExampleRegistrarModule_submit").click(function(){
-            $("#ExampleRegistrarModuleSettings input[name=controller]").val("settings");
+        $("#SynergyWholesaleModule_submit").click(function(){
+            $("#SynergyWholesaleModuleSettings input[name=controller]").val("settings");
             MioAjaxElement($(this),{
                 waiting_text:waiting_text,
                 progress_text:progress_text,
-                result:"ExampleRegistrarModule_handler",
+                result:"SynergyWholesaleModule_handler",
             });
         });
     });
 
-    function ExampleRegistrarModule_handler(result){
+    function SynergyWholesaleModule_handler(result){
         if(result != ''){
             var solve = getJson(result);
             if(solve !== false){
                 if(solve.status == "error"){
                     if(solve.for != undefined && solve.for != ''){
-                        $("#ExampleRegistrarModuleSettings "+solve.for).focus();
-                        $("#ExampleRegistrarModuleSettings "+solve.for).attr("style","border-bottom:2px solid red; color:red;");
-                        $("#ExampleRegistrarModuleSettings "+solve.for).change(function(){
+                        $("#SynergyWholesaleModuleSettings "+solve.for).focus();
+                        $("#SynergyWholesaleModuleSettings "+solve.for).attr("style","border-bottom:2px solid red; color:red;");
+                        $("#SynergyWholesaleModuleSettings "+solve.for).change(function(){
                             $(this).removeAttr("style");
                         });
                     }
