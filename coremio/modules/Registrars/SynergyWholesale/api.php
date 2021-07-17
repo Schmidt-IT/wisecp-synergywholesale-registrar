@@ -485,10 +485,8 @@ class SynergyWholesale_API
      */
     function synergywholesaledomains_getNameservers(array $params, $include_dns_config = false)
     {
-        try {
-            $response = $this->synergywholesaledomains_apiRequest('domainInfo', $params, [], true);
-        } catch (\Exception $e) {
-            $this->error = $e->getMessage();
+        $response = $this->synergywholesaledomains_apiRequest('domainInfo', $params, []);
+        if (!$response) {
             return false;
         }
 
@@ -517,12 +515,16 @@ class SynergyWholesale_API
     {
         $request = [
             'dnsConfigType' => 1,
-            'nameServers' => $params['nameServers'] //$this->synergywholesaledomains_helper_getNameservers($params),
+            'nameServers' => $this->synergywholesaledomains_helper_getNameservers($params['nameServers']),
         ];
 
         // TODO: Add hostname validation onto the provided nameservers.
 
-        return $this->$this->synergywholesaledomains_apiRequest('updateNameServers', $params, $request, false);
+        $response = $this->synergywholesaledomains_apiRequest('updateNameServers', $params, $request);
+        if (!$response) {
+            return false;
+        }
+        return $response;
     }
 
     /**
