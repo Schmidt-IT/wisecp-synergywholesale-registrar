@@ -191,7 +191,7 @@ class SynergyWholesale
             'whois' => $whois,
             'idProtect' => $wprivacy,
             'authInfo' => $eppCode,
-            'doRenewal' => 1,
+            'doRenewal' => 'on',
             'premiumEnabled' => 0,
             'premiumCost' => ''
         ];
@@ -205,6 +205,7 @@ class SynergyWholesale
         $params['whois']['adminState'] = $params['whois']['State'];
         $params['whois']['adminZipCode'] = $params['whois']['ZipCode'];
         $params['whois']['adminPhone'] = $params['whois']['Phone'];
+        $params['whois']['adminPhoneCountryCode'] = $params['whois']['PhoneCountryCode'];
         $params['whois']['adminEMail'] = $params['whois']['EMail'];
         $params['whois']['adminCompany'] = $params['whois']['Company'];
 
@@ -563,9 +564,10 @@ class SynergyWholesale
             throw new \Exception(var_dump_str($this->error));
             return false;
         }
-
+        // throw new \Exception(var_dump_str($details));
         $start              = DateManager::format("Y-m-d", $details["domain_create"]);
-        $end                = DateManager::format("Y-m-d", $details["domain_expiry"]);
+        // $end                = DateManager::format("Y-m-d", $details["domain_expiry"]);
+        $end                = '';
         $status             = $details["domain_status"];
 
         $return_data = [
@@ -675,19 +677,20 @@ class SynergyWholesale
     public function domains(){
         Helper::Load(["User"]);
 
+        $result = [];
+
         $data = $this->api->get_domains();
         if(!$data && $this->api->error){
             $this->error = $this->api->error;
-            return false;
+            return $result;
         }
 
-        $result     = [];
 
         if($data && is_array($data)){
             foreach($data AS $res){
-                $cdate      = isset($res["creation_date"]) ? DateManager::format("Y-m-d",$res["creation_date"]) : '';
-                $edate      = isset($res["domain_expiry"]) ? DateManager::format("Y-m-d",$res["domain_expiry"]) : '';
-                $domain     = isset($res["domainName"]) ? $res["domainName"] : '';
+                $cdate      = isset($res->creation_date) ? DateManager::format("Y-m-d",$res->creation_date) : '';
+                $edate      = isset($res->domain_expiry) ? DateManager::format("Y-m-d",$res->domain_expiry) : '';
+                $domain     = isset($res->domainName) ? $res->domainName : '';
                 if($domain){
                     $domain      = idn_to_utf8($domain,0,INTL_IDNA_VARIANT_UTS46);
                     $order_id    = 0;

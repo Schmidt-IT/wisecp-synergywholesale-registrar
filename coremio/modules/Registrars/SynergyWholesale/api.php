@@ -268,8 +268,8 @@ class SynergyWholesale_API
                     }
                 }
 
-                if ('state' === $destination && 'AU' === $params['whois'][$whmcs_contact . 'country']) {
-                    $state = $this->synergywholesaledomains_validateAUState($params['whois'][$whmcs_contact . 'state']);
+                if ('state' === $destination && 'AU' === $params['whois'][$whmcs_contact . 'Country']) {
+                    $state = $this->synergywholesaledomains_validateAUState($params['whois'][$whmcs_contact . 'State']);
                     if (!$state) {
                         $this->error = 'A Valid Australian State Name Must Be Supplied, EG. NSW, VIC';
                         return false;
@@ -726,6 +726,7 @@ class SynergyWholesale_API
         if (!$contact) {
             return false;
         }
+
         if (preg_match('/\.uk$/', $params['tld'])) {
             $response = $this->$this->synergywholesaledomains_apiRequest('transferDomain', $params, $contact);
             if (!$response) {
@@ -2615,7 +2616,7 @@ class SynergyWholesale_API
             throw new Exception($this->error);
             return false;
 
-        } if ($response['errorMessage']) {
+        } if (in_array("errorMessage", $response)) {
             $this->error = $response['errorMessage'];
             throw new Exception($response['errorMessage']);
             return false;
