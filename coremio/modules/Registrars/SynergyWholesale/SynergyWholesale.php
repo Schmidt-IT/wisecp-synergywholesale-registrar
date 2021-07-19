@@ -564,10 +564,9 @@ class SynergyWholesale
             throw new \Exception(var_dump_str($this->error));
             return false;
         }
-        // throw new \Exception(var_dump_str($details));
-        $start              = DateManager::format("Y-m-d", $details["domain_create"]);
-        // $end                = DateManager::format("Y-m-d", $details["domain_expiry"]);
-        $end                = '';
+
+        $start              = in_array("domain_create", $details) ? DateManager::format("Y-m-d", $details["domain_create"]) : '';
+        $end                = in_array("domain_expiry", $details) ? DateManager::format("Y-m-d", $details["domain_expiry"]) : '';
         $status             = $details["domain_status"];
 
         $return_data = [
