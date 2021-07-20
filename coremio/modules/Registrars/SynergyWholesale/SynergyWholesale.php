@@ -706,6 +706,7 @@ class SynergyWholesale
 
     public function import_domain($data = [])
     {
+        $config = $this->config;
 
         $imports = [];
 
@@ -782,7 +783,7 @@ class SynergyWholesale
                 "cdate"             => $start_date,
                 "duedate"           => $end_date,
                 "renewaldate"       => DateManager::Now(),
-                "module"            => $this->config["meta"]["name"],
+                "module"            => $config["meta"]["name"],
                 "options"           => Utility::jencode($options),
                 "unread"            => 1,
             ];
@@ -819,7 +820,7 @@ class SynergyWholesale
         if ($imports) {
             $adata      = UserManager::LoginData("admin");
             User::addAction($adata["id"], "alteration", "domain-imported", [
-                'module'   => $this->config["meta"]["name"],
+                'module'   => $config["meta"]["name"],
                 'imported'  => implode(", ", $imports),
             ]);
         }
