@@ -299,9 +299,9 @@ class SynergyWholesale_API
         exit;
     }
 
-    function get_details($domain) {
-        $params['domainName'] = $domain;
-        return $this->synergywholesaledomains_apiRequest('domainInfo', $params);
+    function get_details($params) {
+        $request['domainName'] = $params['domainName'];
+        return $this->synergywholesaledomains_apiRequest('domainInfo', $params, $request);
     }
 
 
@@ -2643,10 +2643,10 @@ class SynergyWholesale_API
         ];
     }
 
-    function get_domains() {
+    function get_domains($page=1, $pageSize=100) {
         // paginated request
-        // $request['page']=0;
-        // $request['limit']=500;
+        $request['page'] = $page;
+        $request['limit'] = $pageSize;
         // $request['status']=('ok', 'clienthold', 'dropped','transferredaway', 'deleted', 'inactive', 'clientTransferProhibited','cilentUpdatedProhibited', 'pendingDelete', 'policyDelete', 'redemption', etc.)
         $response = $this->synergywholesaledomains_apiRequest('listDomains');
         // throw new Exception(var_dump_str($response));

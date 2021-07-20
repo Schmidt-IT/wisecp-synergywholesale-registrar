@@ -245,12 +245,12 @@ function SynergyWholesale_open_tab(elem, tabName){
 
             });
         </script>
-        <form action="<?php echo Controllers::$init->getData("links")["controller"]; ?>" method="post" id="SynergyWholesaleModuleImport">
+        <form action="<?php echo Controllers::$init->getData("links")["controller"]; ?>" method="post" id="SynergyWholesaleImport">
             <input type="hidden" name="operation" value="module_controller">
-            <input type="hidden" name="module" value="SynergyWholesaleModule">
+            <input type="hidden" name="module" value="SynergyWholesale">
             <input type="hidden" name="controller" value="import">
 
-            <table width="100%" id="SynergyWholesaleModule_list_domains" class="table table-striped table-borderedx table-condensed nowrap">
+            <table width="100%" id="SynergyWholesale_list_domains" class="table table-striped table-borderedx table-condensed nowrap">
                 <thead style="background:#ebebeb;">
                 <tr>
                     <th align="center" data-orderable="false">#</th>
@@ -303,7 +303,7 @@ function SynergyWholesale_open_tab(elem, tabName){
 
             <div class="clear"></div>
             <div class="guncellebtn yuzde20" style="float: right;">
-                <a href="javascript:void(0);" id="SynergyWholesaleModule_import_submit" class="gonderbtn mavibtn"><?php echo $LANG["import-button"]; ?></a>
+                <a href="javascript:void(0);" id="SynergyWholesale_import_submit" class="gonderbtn mavibtn"><?php echo $LANG["import-button"]; ?></a>
             </div>
 
         </form>

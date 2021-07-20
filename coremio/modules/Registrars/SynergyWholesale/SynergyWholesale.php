@@ -556,8 +556,8 @@ class SynergyWholesale
             return false;
         }
 
-        $start              = in_array("domain_create", $details) ? DateManager::format("Y-m-d", $details["domain_create"]) : '';
-        $end                = in_array("domain_expiry", $details) ? DateManager::format("Y-m-d", $details["domain_expiry"]) : '';
+        $start              = array_key_exists("domain_create", $details) ? DateManager::format("Y-m-d", $details["domain_create"]) : '';
+        $end                = array_key_exists("domain_expiry", $details) ? DateManager::format("Y-m-d", $details["domain_expiry"]) : '';
         $status             = $details["domain_status"];
 
         $return_data = [
@@ -581,12 +581,9 @@ class SynergyWholesale
 
     public function get_info($params = [])
     {
-        $domain = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
+        $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
-        $details = $this->api->get_details($domain);
-
-        $this->error = var_dump_str($details);
-        return false;
+        $details = $this->api->get_details($params);
 
         if (!$details) {
             $this->error = $this->api->error;
@@ -595,10 +592,10 @@ class SynergyWholesale
 
         $result = [];
 
-        $cdate              = DateManager::format("Y-m-d", $details["domain_create"]);
-        $duedate            = DateManager::format("Y-m-d", $details["domain_expiry"]);
+        $cdate              = array_key_exists("domain_create", $details) ? DateManager::format("Y-m-d", $details["domain_create"]) : '';
+        $duedate            = array_key_exists("domain_create", $details) ? DateManager::format("Y-m-d", $details["domain_expiry"]) : '';
 
-        $wprivacy           = $details["idProtect"] != "Disabled" ? ($OrderDetails["idProtect"] == "Enabled") : "none";
+        $wprivacy           = $details["idProtect"] != "Disabled" ? ($details["idProtect"] == "Enabled") : "none";
         if ($wprivacy && $wprivacy != "none") {
             $wprivacy_endtime_i   = isset($details["privacy_endtime"]) ? $details["privacy_endtime"] : "none";
             if ($wprivacy_endtime_i && $wprivacy_endtime_i != "none")
@@ -709,7 +706,6 @@ class SynergyWholesale
 
     public function import_domain($data = [])
     {
-        $config = $this->config;
 
         $imports = [];
 
@@ -786,7 +782,7 @@ class SynergyWholesale
                 "cdate"             => $start_date,
                 "duedate"           => $end_date,
                 "renewaldate"       => DateManager::Now(),
-                "module"            => $config["meta"]["name"],
+                "module"            => $this->config["meta"]["name"],
                 "options"           => Utility::jencode($options),
                 "unread"            => 1,
             ];
@@ -823,7 +819,7 @@ class SynergyWholesale
         if ($imports) {
             $adata      = UserManager::LoginData("admin");
             User::addAction($adata["id"], "alteration", "domain-imported", [
-                'module'   => $config["meta"]["name"],
+                'module'   => $this->config["meta"]["name"],
                 'imported'  => implode(", ", $imports),
             ]);
         }
