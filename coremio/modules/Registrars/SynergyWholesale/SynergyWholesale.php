@@ -279,9 +279,6 @@ class SynergyWholesale
 
         $details = $this->api->synergywholesaledomains_getNameservers($params);
 
-        $this->error = var_dump_str($details);
-        return false;
-
         if (!$details) {
             $this->error = $this->api->error;
             return false;
@@ -322,13 +319,11 @@ class SynergyWholesale
             return false;
         }
 
-        $data     = [];
-        $i        = 0;
+        $data = [];
 
-        if ($get_list) {
-            foreach ($get_list as $row) {
-                $i += 1;
-                $data[$i] = ['ns' => $row["hostName"], 'ip' => $row["ip"]];
+        if (isset($get_list["hosts"])) {
+            foreach ($get_list["hosts"] as $row) {
+                $data[] = ['ns' => $row->hostName, 'ip' => $row->ip[0]];
             }
         }
         return $data;
@@ -592,69 +587,63 @@ class SynergyWholesale
 
         $result = [];
 
-        $cdate              = array_key_exists("domain_create", $details) ? DateManager::format("Y-m-d", $details["domain_create"]) : '';
-        $duedate            = array_key_exists("domain_create", $details) ? DateManager::format("Y-m-d", $details["domain_expiry"]) : '';
-
-        $wprivacy           = $details["idProtect"] != "Disabled" ? ($details["idProtect"] == "Enabled") : "none";
-        if ($wprivacy && $wprivacy != "none") {
-            $wprivacy_endtime_i   = isset($details["privacy_endtime"]) ? $details["privacy_endtime"] : "none";
-            if ($wprivacy_endtime_i && $wprivacy_endtime_i != "none")
-                $wprivacy_endtime   = DateManager::format("Y-m-d", $details["privacy_endtime"]);
+        $result["creation_time"] = array_key_exists("domain_create", $details) ? DateManager::format("Y-m-d", $details["domain_create"]) : '';
+        if ($result["creation_time"] == '' ) {
+            $result["creation_time"] = array_key_exists("createdDate", $details) ? DateManager::format("Y-m-d", $details["createdDate"]) : '';
         }
-        // nameServers
-        $ns1                = isset($details["ns1"]) ? $details["ns1"] : false;
-        $ns2                = isset($details["ns2"]) ? $details["ns2"] : false;
-        $ns3                = isset($details["ns3"]) ? $details["ns3"] : false;
-        $ns4                = isset($details["ns4"]) ? $details["ns4"] : false;
-        $whois_data         = isset($details["registrant_contact"]) ? $details["registrant_contact"] : [];
+        $result["end_time"] = array_key_exists("domain_expiry", $details) ? DateManager::format("Y-m-d", $details["domain_expiry"]) : '';
+
+        $wprivacy = $details["idProtect"] != "Disabled" ? ($details["idProtect"] == "Enabled") : "none";
+        if ($wprivacy && $wprivacy != "none") {
+            $wprivacy_endtime_i = isset($details["privacy_endtime"]) ? $details["privacy_endtime"] : "none";
+            if ($wprivacy_endtime_i && $wprivacy_endtime_i != "none")
+                $wprivacy_endtime = DateManager::format("Y-m-d", $details["privacy_endtime"]);
+        }
+
+        // DNSSEC
+        // [keyTag] => 9885
+        // [Algoirthm] => 5
+        // [Digest] => 476XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        // [DigestType] => 1
+        // [UUID] => 87xxx5xxx4
+        $dnssec = isset($details["DSData"]) ? $details["DSData"] : [];
+
+        foreach ($details['nameServers'] as $index => $value) {
+            $result['ns' . ($index + 1)] = strtolower($value);
+        }
+        $whois_data = $this->api->synergywholesaledomains_GetContactDetails($params);
+        $whois_data = isset($whois_data["Registrant"]) ? $whois_data["Registrant"] : [];
 
         if ($whois_data) {
-            $whois                  = [
-                'FirstName'         =>  $whois_data["name"],
-                'LastName'          =>  $whois_data["surname"],
-                'Name'              =>  $whois_data["fullname"],
-                'Company'           =>  $whois_data["company"] == 'N/A' ? "" : $whois_data["company"],
-                'EMail'             =>  $whois_data["emailaddr"],
-                'AddressLine1'      =>  $whois_data["address1"],
-                'AddressLine2'      =>  isset($whois_data["address2"]) ? $whois_data["address2"] : "",
-                'City'              =>  $whois_data["city"],
-                'State'             =>  isset($whois_data["state"]) ? $whois_data["state"] : '',
-                'ZipCode'           =>  $whois_data["zip"],
-                'Country'           =>  $whois_data["country"],
-                'PhoneCountryCode' => $whois_data["telnocc"],
-                'Phone'            => $whois_data["telno"],
-                'FaxCountryCode'   => isset($whois_data["faxnocc"]) ? $whois_data["faxnocc"] : "",
-                'Fax'              => isset($whois_data["faxno"]) ? $whois_data["faxno"] : "",
+            $whois = [
+                'FirstName'         =>  $whois_data["First Name"],
+                'LastName'          =>  $whois_data["Last Name"],
+                'Name'              =>  $whois_data["First Name"] . " " . $whois_data["Last Name"],
+                'Company'           =>  $whois_data["Company"] == 'N/A' ? "" : $whois_data["Company"],
+                'EMail'             =>  $whois_data["Email"],
+                'AddressLine1'      =>  $whois_data["Address 1"],
+                'AddressLine2'      =>  isset($whois_data["Address 2"]) ? $whois_data["Address 2"] : "",
+                'City'              =>  $whois_data["City"],
+                'State'             =>  isset($whois_data["State"]) ? $whois_data["State"] : '',
+                'ZipCode'           =>  $whois_data["Postcode"],
+                'Country'           =>  $whois_data["Country"],
+                'PhoneCountryCode'  =>  "",
+                'Phone'             => $whois_data["Phone"],
+                'FaxCountryCode'    =>  "",
+                'Fax'               => isset($whois_data["Fax"]) ? $whois_data["Fax"] : "",
             ];
         }
-
-        $result["creation_time"]    = $cdate;
-        $result["end_time"]         = $duedate;
 
         if (isset($wprivacy) && $wprivacy != "none") {
             $result["whois_privacy"] = ['status' => $wprivacy ? "enable" : "disable"];
             if (isset($wprivacy_endtime) && $wprivacy_endtime) $result["whois_privacy"]["end_time"] = $wprivacy_endtime;
         }
 
-        if (isset($ns1) && $ns1) $result["ns1"] = $ns1;
-        if (isset($ns2) && $ns2) $result["ns2"] = $ns2;
-        if (isset($ns3) && $ns3) $result["ns3"] = $ns3;
-        if (isset($ns4) && $ns4) $result["ns4"] = $ns4;
         if (isset($whois) && $whois) $result["whois"] = $whois;
 
-        $result["transferlock"] = $details["domain_status"] == "clientTransferProhibited";
+        $result["transferlock"] = $details["domainStatus"] == "clientTransferProhibited";
 
-        if (isset($details["child_nameservers"])) {
-            $CNSList = $details["child_nameservers"];
-            $cnsx = [];
-            $i = 0;
-            foreach ($CNSList as $k => $v) {
-                $i += 1;
-                $cnsx[$i] = ['ns' => $k, 'ip' => $v];
-            }
-            $result["cns"] = $cnsx;
-        }
-
+        $result["cns"] = $this->CNSList($params);
         return $result;
     }
 
@@ -675,6 +664,9 @@ class SynergyWholesale
         if($data && is_array($data)){
             foreach($data AS $res){
                 $cdate      = isset($res->creation_date) ? DateManager::format("Y-m-d",$res->creation_date) : '';
+                if ($cdate == "") {
+                    $cdate  = isset($res->createdDate) ? DateManager::format("Y-m-d",$res->createdDate) : '';
+                }
                 $edate      = isset($res->domain_expiry) ? DateManager::format("Y-m-d",$res->domain_expiry) : '';
                 $domain     = isset($res->domainName) ? $res->domainName : '';
                 if($domain){

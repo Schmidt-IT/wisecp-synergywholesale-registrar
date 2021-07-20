@@ -17,7 +17,13 @@ function var_dump_str($var) {
     ob_start();
     var_dump($var);
     $result = ob_get_clean();
-    return $result;
+    return "<pre>" . $result . "</pre><br>";
+}
+
+function debug($obj) {
+    $file = fopen(getcwd() . "/logfile.html", "w") or die("error writing to write to log");
+    fwrite($file, var_dump_str($obj));
+    fclose($file);
 }
 
 function strlen_check(array $matches, int $subpattern_num, int $i) {
@@ -322,7 +328,12 @@ class SynergyWholesale_API
     // Delete a Child Nameserver from a domain
     function delete_child_nameserver($params, $ns) {
         $request['domainName'] = $params['domainName'];
-        $request['host'] = $ns;
+        // Only remove the firs occurrence of the domain name to accurately get the sub domain.
+        // reversing the string to make sure we are removing from the end.
+        $count = 1;
+        $subdomain = trim(strrev(str_replace(strrev($params['domainName']), "", strrev($ns), $count)), "\.");
+
+        $request['host'] = $subdomain;
         return $this->synergywholesaledomains_apiRequest('deleteHost', $params, $request);
     }
 
