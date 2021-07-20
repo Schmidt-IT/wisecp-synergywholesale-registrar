@@ -404,8 +404,8 @@ class SynergyWholesale
 
     public function getWhoisPrivacy($params = [])
     {
-        $domain = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
-        $details = $this->api->get_details($domain);
+        $params["domainName"] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
+        $details = $this->api->get_details($params);
         $this->error = var_dump_str($details);
         return false;
 
@@ -437,9 +437,9 @@ class SynergyWholesale
 
     public function isInactive($params = [])
     {
-        $domain = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
+        $params["domainName"] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
-        $details = $this->api->get_details($domain);
+        $details = $this->api->get_details($params);
         $this->error = var_dump_str($details);
         return false;
 
@@ -547,9 +547,9 @@ class SynergyWholesale
 
     public function sync($params = [])
     {
-        $domain = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
+        $params["domainName"] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
-        $details = $this->api->get_details($domain);
+        $details = $this->api->get_details($params);
         if (!$details) {
             $this->error = $this->api->error;
             throw new \Exception(var_dump_str($this->error));
