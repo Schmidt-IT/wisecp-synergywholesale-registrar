@@ -86,6 +86,8 @@ class SynergyWholesale_API
         return $params['sld'] . '.' . $params['tld'];
     }
 
+
+    // convert nameservers from flat names (params["nsX"]) to array
     function synergywholesaledomains_helper_getNameservers(array $params)
     {
         $nameservers = [];
@@ -302,6 +304,36 @@ class SynergyWholesale_API
         return $this->synergywholesaledomains_apiRequest('domainInfo', $params);
     }
 
+
+    // list Child Nameservers of a domain
+    function get_child_nameservers($params) {
+        $request['domainName'] = $params['domainName'];
+        return $this->synergywholesaledomains_apiRequest('listAllHosts', $params, $request);
+    }
+
+    // Add a Child Nameserver to a domain
+    function add_child_nameserver($params, $ns, $ip) {
+        $request['domainName'] = $params['domainName'];
+        $request['host'] = $ns;
+        $request['ipAddress'][] = $ip;
+        return $this->synergywholesaledomains_apiRequest('addHost', $params, $request);
+    }
+
+    // Delete a Child Nameserver from a domain
+    function delete_child_nameserver($params, $ns) {
+        $request['domainName'] = $params['domainName'];
+        $request['host'] = $ns;
+        return $this->synergywholesaledomains_apiRequest('deleteHost', $params, $request);
+    }
+
+    // Modify a Child Nameserver from a domain
+    // function modify_child_nameserver($params, $ns, $ip) {
+    //     $request['domainName'] = $params['domainName'];
+    //     $request['host'] = $ns;
+    //     $request['ipAddress'] = $ip;
+    //     return $this->synergywholesaledomains_apiRequest('deleteHostIP', $params, $request);
+    // }
+
     /*
          * Returns the configuration for the Synergy Wholesale WHMCS domains module.
          *
@@ -513,9 +545,16 @@ class SynergyWholesale_API
      */
     function synergywholesaledomains_SaveNameservers(array $params)
     {
+        // dnsConfig:
+        // 1 Custom Name Servers
+        // 2 Email/Web Forwarding
+        // 3 Parked
+        // 4 DNS Hosting
+        // nsX.nameserver.net.au
+        // synergywholesaledomains_helper_getNameservers
         $request = [
-            'dnsConfigType' => 1,
-            'nameServers' => $this->synergywholesaledomains_helper_getNameservers($params['nameServers']),
+            'dnsConfig' => 1, // Custom Name Servers
+            'nameServers' => $params['nameServers'],
         ];
 
         // TODO: Add hostname validation onto the provided nameservers.

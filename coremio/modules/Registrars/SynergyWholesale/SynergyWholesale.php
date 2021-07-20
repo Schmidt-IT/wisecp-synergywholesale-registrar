@@ -314,27 +314,24 @@ class SynergyWholesale
 
     public function CNSList($params = [])
     {
-        //Child Nameservers are not supported
-        return [];
+        $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
-        // $domain = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
+        $get_list = $this->api->get_child_nameservers($params);
+        if (!$get_list && $this->api->error) {
+            $this->error = $this->api->error;
+            return false;
+        }
 
-        // $get_list = $this->api->get_child_nameservers($domain);
-        // if (!$get_list && $this->api->error) {
-        //     $this->error = $this->api->error;
-        //     return false;
-        // }
+        $data     = [];
+        $i        = 0;
 
-        // $data     = [];
-        // $i        = 0;
-
-        // if ($get_list) {
-        //     foreach ($get_list as $row) {
-        //         $i += 1;
-        //         $data[$i] = ['ns' => $row["nameserver"], 'ip' => $row["ip_address"]];
-        //     }
-        // }
-        // return $data;
+        if ($get_list) {
+            foreach ($get_list as $row) {
+                $i += 1;
+                $data[$i] = ['ns' => $row["hostName"], 'ip' => $row["ip"]];
+            }
+        }
+        return $data;
     }
 
     public function addCNS($params = [], $ns = '', $ip = '')
@@ -342,16 +339,13 @@ class SynergyWholesale
         $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
         $ns = idn_to_ascii($ns, 0, INTL_IDNA_VARIANT_UTS46);
 
-        $this->error = "Adding Child Nameservers is not supported";
-        return false;
+        $addCNS = $this->api->add_child_nameserver($params,$ns,$ip);
+        if(!$addCNS){
+            $this->error = $this->api->error;
+            return false;
+        }
 
-        // $addCNS = $this->api->add_child_nameserver($domain,$ns,$ip);
-        // if(!$addCNS){
-        //     $this->error = $this->api->error;
-        //     return false;
-        // }
-
-        // return ['ns' => $ns,'ip' => $ip];
+        return ['ns' => $ns,'ip' => $ip];
     }
 
     public function ModifyCNS($params = [], $old = [], $new_ns = '', $new_ip = '')
@@ -378,16 +372,13 @@ class SynergyWholesale
         $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
         $ns = idn_to_ascii($ns, 0, INTL_IDNA_VARIANT_UTS46);
 
-        $this->error = "Removing Child Nameservers is not supported";
-        return false;
+        $delete     = $this->api->delete_child_nameserver($params,$ns);
+        if(!$delete){
+            $this->error = $this->api->error;
+            return false;
+        }
 
-        // $delete     = $this->api->delete_child_nameserver($domain,$ns,$ip);
-        // if(!$delete){
-        //     $this->error = $this->api->error;
-        //     return false;
-        // }
-
-        // return true;
+        return true;
     }
 
 
@@ -684,7 +675,6 @@ class SynergyWholesale
             return $result;
         }
 
-
         if($data && is_array($data)){
             foreach($data AS $res){
                 $cdate      = isset($res->creation_date) ? DateManager::format("Y-m-d",$res->creation_date) : '';
@@ -708,7 +698,7 @@ class SynergyWholesale
                         'creation_date'     => $cdate,
                         'end_date'          => $edate,
                         'order_id'          => $order_id,
-                        'user_data'        => $user_data,
+                        'user_data'         => $user_data,
                     ];
                 }
             }
