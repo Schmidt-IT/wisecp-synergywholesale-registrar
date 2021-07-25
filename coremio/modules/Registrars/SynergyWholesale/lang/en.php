@@ -15,11 +15,11 @@ return [
     'desc'              => [
         'username'      => '',
         'password'      => '',
-        'WHiddenAmount' => '<br>WHOIS protection service fee.',
+        'WHiddenAmount' => '',
         'test-mode'     => 'Use API in test mode.',
         'adp'           => 'Automatically retrieve costs every day and update the sale prices with the profit rate you specify.',
         'cost-currency' => '',
-        'import-tld-1'  => 'Automatically import all extensions registered on the API.',
+        'import-tld-1'  => 'Automatically import all available extensions registered. Please check the "Auto Update Of Costs" box first',
         'import-tld-2'  => 'All domain extensions and costs registered on the API will be imported collectively.',
     ],
     'tab-detail'        => 'API Information',
