@@ -128,6 +128,10 @@ class SynergyWholesale_API
             'resellerID' => $this->resellerID,
         ];
 
+        if (isset($this->test_mode) && $this->test_mode === true) {
+            $request['test_api_connection'] = 'on';
+        }
+
         /**
          * It has been decided that we will always send analytics.
          * This helps us make the most informed decision in terms of
@@ -145,10 +149,6 @@ class SynergyWholesale_API
             $request = array_merge($request, $auth);
         }
 
-        // if (!isset($request['domainName']) && $force_domain) {
-        //     $request['domainName'] = $params['sld'] . '.' . $params['tld'];
-        // }
-
         if (!isset($request['domainName']) && isset($params['sld']) && isset($params['tld'])) {
             $request['domainName'] = $params['sld'] . '.' . $params['tld'];
         } else if (!isset($request['domainName']) && isset($params['domainName'])) {
@@ -160,22 +160,10 @@ class SynergyWholesale_API
         $url        = API_ENDPOINT . '/?wsdl';
         $client     = new SoapClient($url, array("trace" => 1, "exception" => 0));
 
-        // $client = new \SoapClient(null, [
-            //     'location' => API_ENDPOINT . '/?wsdl',
-            //     'uri' => '',
-            //     'trace' => true,
-            // ]);
-
-        // if ($throw_on_error) {
-        //     throw new \Exception($command . var_dump_str($request));
-        // }
 
         try {
             $response = $client->{$command}($request);
-            // logModuleCall(SW_MODULE_NAME, $command, $request, $response, $response, $auth);
         } catch (SoapFault $e) {
-            // logModuleCall(SW_MODULE_NAME, $command, $request, $e->getMessage(), $e->getMessage(), $auth);
-
             if ($throw_on_error) {
                 // Convert SOAP Faults to Exceptions
                 throw new \Exception($e->getMessage());
@@ -318,6 +306,7 @@ class SynergyWholesale_API
     }
 
     // Add a Child Nameserver to a domain
+    // Only support 1 IP per hostname
     function add_child_nameserver($params, $ns, $ip) {
         $request['domainName'] = $params['domainName'];
         $request['host'] = $ns;
@@ -449,7 +438,7 @@ class SynergyWholesale_API
             $this->error = 'This domain name does not support registrar lock.';
             return false;
         }
-        //$command = 'locked' === $locked ? 'unlockDomain' : 'lockDomain';
+
         if ($locked == 'locked' && $command == 'unlockDomain' || $locked == 'unlocked' && $command == 'lockDomain') {
             return $this->$this->synergywholesaledomains_apiRequest($command, $params, [], false);
         } else {
@@ -482,7 +471,7 @@ class SynergyWholesale_API
     function synergywholesaledomains_RegisterDomain(array $params)
     {
         $request = [
-            'nameServers' => $params['nameServers'], //$this->synergywholesaledomains_helper_getNameservers($params),
+            'nameServers' => $params['nameServers'],
             'years' => $params['years'],
             'idProtect' => $params['idProtect'],
             'specialConditionsAgree' => true,
@@ -578,7 +567,6 @@ class SynergyWholesale_API
             $request['costPrice'] = $params['premiumCost'];
             $request['premium'] = true;
         }
-        // $this->error = (var_dump_str($request['eligibility'])); return false;
 
         try {
             $this->synergywholesaledomains_apiRequest('domainRegister', $params, $request, true);
@@ -764,63 +752,6 @@ class SynergyWholesale_API
             $check = $this->synergywholesaledomains_apiRequest('checkDomain', $params, [
                 'command' => 'renew',
             ], true);
-
-            if ($check['premium']) {
-                // Get the currency ID for AUD
-                $currency = Capsule::table('tblcurrencies')
-                    ->select('id')
-                    ->where('code', 'AUD')
-                    ->first();
-                if (!isset($currency->id)) {
-                    return [
-                        'error' => 'Failed to find AUD in currency table.',
-                    ];
-                }
-
-                $markup = $check['costPrice'];
-                if (class_exists('WHMCS\Domains\Pricing\Premium')) {
-                    $markup *= 1 + WHMCS\Domains\Pricing\Premium::markupForCost($markup) / 100;
-                }
-
-                Capsule::table('tbldomains')
-                    ->where('id', $params['domainid'])
-                    ->update([
-                        'is_premium' => 1,
-                        'recurringamount' => $markup,
-                    ]);
-
-                Capsule::table('tbldomains_extra')
-                    ->updateOrInsert(
-                        [
-                            'domain_id' => $params['domainid'],
-                            'name' => 'registrarRenewalCostPrice',
-                        ],
-                        [
-                            'value' => $check['costPrice'],
-                        ]
-                    );
-                Capsule::table('tbldomains_extra')
-                    ->updateOrInsert(
-                        [
-                            'domain_id' => $params['domainid'],
-                            'name' => 'registrarCurrency',
-                        ],
-                        [
-                            'value' => $currency->id,
-                        ]
-                    );
-            } elseif (!$check['premium'] && $domain->is_premium) {
-                // Mark as not premium and recalculate the recurring amount.
-                $pricing = localAPI('GetTLDPricing')['pricing'];
-                $recurringamount = $pricing[$params['tld']]['renew'][$domain->registrationperiod];
-
-                Capsule::table('tbldomains')
-                    ->where('id', $params['domainid'])
-                    ->update([
-                        'is_premium' => 0,
-                        'recurringamount' => $recurringamount,
-                    ]);
-            }
         } catch (\Exception $e) {
             $this->error = $e->getMessage();
             return false;
@@ -1353,126 +1284,6 @@ class SynergyWholesale_API
     }
 
     /**
-     * Controller for the "Manage Child Hosts" page.
-     *
-     * @param array $params
-     */
-    function synergywholesaledomains_manageChildHosts(array $params)
-    {
-        $request = $vars = $errors = [];
-
-        $domainName = $this->synergywholesaledomains_helper_getDomain($params);
-
-        if (isset($_REQUEST['sub'])) {
-            switch ($_REQUEST['sub']) {
-                case 'Manage Host':
-                    $vars = [
-                        'manageHost' => 1,
-                        'hostname' => $_REQUEST['ipHost'],
-                    ];
-                    break;
-                case 'Delete Host':
-                    if (!preg_match("/(.*)\.$domainName/", $_REQUEST['ipHost'], $matches)) {
-                        $errors[] = 'Unable to determine the hostname of the child host record';
-                        break;
-                    }
-
-                    list(, $ipHost) = $matches;
-                    try {
-                        $this->synergywholesaledomains_apiRequest('deleteHost', $params, [
-                            'host' => $ipHost,
-                        ], true);
-                        $vars['info'] = 'Child Host has been successfully deleted';
-                    } catch (\Exception $e) {
-                        $error[] = 'Unable to delete host record: ' . $e->getMessage();
-                    }
-                    break;
-                case 'Save Host':
-                    try {
-                        $ret = $this->synergywholesaledomains_apiRequest('addHost', $params, [
-                            'host' => $_REQUEST['newHostName'],
-                            'ipAddress' => [
-                                $_REQUEST['ipRecord'],
-                            ],
-                        ], true);
-                    } catch (\Exception $e) {
-                        $errors[] = 'There was an error adding the new host: ' . $e->getMessage();
-                    }
-                    break;
-                case 'Delete Host IP':
-                case 'Save Host IP':
-                    $vars = [
-                        'manageHost' => 1,
-                        'hostname' => $_REQUEST['ipHost'],
-                    ];
-
-                    if (!preg_match("/(.*)\.$domainName/", $_REQUEST['ipHost'], $matches)) {
-                        $errors[] = 'Unable to determine the hostname of the child host record';
-                        break;
-                    }
-
-                    $save = 'Save Host IP' === $_REQUEST['sub'];
-
-                    list(, $ipHost) = $matches;
-                    try {
-                        $command = ($save ? 'addHostIP' : 'deleteHostIP');
-                        $this->synergywholesaledomains_apiRequest($command, $params, [
-                            'host' => $ipHost,
-                            'ipAddress' => [
-                                $_REQUEST['ipRecord'],
-                            ],
-                        ], true);
-
-                        $vars['info'] = sprintf(
-                            'IP %s successfully %s the child host record',
-                            ($save ? 'added' : 'removed'),
-                            ($save ? 'to' : 'from')
-                        );
-                    } catch (\Exception $e) {
-                        $errors[] = 'There was an error updating the ' . ($save ? 'adding' : 'deleting')  . ' IP: ' . $e->getMessage();
-                    }
-                    break;
-            }
-        }
-
-        try {
-            $vars['records'] = [];
-            $hosts = $this->synergywholesaledomains_apiRequest('listAllHosts', $params, [], true);
-            foreach ($hosts['hosts'] as $host) {
-                $vars['records'][$host->hostName] = [];
-                foreach ($host->ip as $ipAddress) {
-                    $vars['records'][$host->hostName][] = $ipAddress;
-                }
-            }
-        } catch (\Exception $e) {
-            if (preg_match('/No Host Records Present/i', $e->getMessage())) {
-                $vars['info'] = 'No host records have been found for this domain name';
-            } else {
-                $errors[] = $e->getMessage();
-            }
-        }
-
-        if (!empty($errors)) {
-            $vars['error'] = implode('<br>', $errors);
-        }
-
-        $uri = 'clientarea.php?' . http_build_query([
-            'action' => 'domaindetails',
-            'domainid' => $params['domainid'],
-            'modop' => 'custom',
-            'a' => 'manageChildHosts',
-        ]);
-
-        return [
-            'templatefile' => 'domainchildhosts',
-            'breadcrumb' => [
-                $uri => 'Manage Child Host Records',
-            ],
-            'vars' => $vars,
-        ];
-    }
-
-    /**
      * Adds a URL Forwarder. This functionality is only available when
      * using the Synergy Wholesale "DNS Hosting" DNS/Nameserver configuration.
      *
@@ -1979,51 +1790,6 @@ class SynergyWholesale_API
         return $this->synergywholesaledomains_apiRequest('transferOutboundApprove', $params, [], false);
     }
 
-    /**
-     * Register our custom pages pages we want to display in the Client Area.
-     *
-     * @param array $params
-     * @return mixed
-     */
-    function synergywholesaledomains_ClientAreaCustomButtonArray(array $params)
-    {
-        $pages = [
-            'Manage Child Host Records' => 'manageChildHosts',
-            'Domain Options'            => 'domainOptions',
-            'Manage DNSSEC Records'     => 'manageDNSSEC',
-        ];
-
-        // We have space here for conditional logic in case we require it.
-
-        return $pages;
-    }
-
-    /**
-     * Register the functionality we want available (conditionally) in the Client Area.
-     *
-     * @param  $params
-     * @return mixed
-     */
-    function synergywholesaledomains_ClientAreaAllowedFunctions(array $params)
-    {
-        $domainInfo = Capsule::table('tbldomains')
-            ->select('dnsmanagement', 'emailforwarding')
-            ->where('id', $params['domainid'])
-            ->first();
-
-        $functions = [];
-
-        if ($domainInfo->dnsmanagement) {
-            $functions['DNS Hosting / URL Forwarding'] = 'manageDNSURLForwarding';
-        }
-
-        if ($domainInfo->emailforwarding) {
-            $functions['Email Forwarding'] = 'manageEmailForwarding';
-        }
-
-        return $functions;
-    }
-
 
     /**
      * @param  $phoneNumber
@@ -2232,14 +1998,6 @@ class SynergyWholesale_API
             default:
                 return false;
         }
-    }
-
-    function synergywholesaledomains_AdminCustomButtonArray()
-    {
-        return [
-            'Sync' => 'sync_adhoc',
-            'Push' => 'push',
-        ];
     }
 
     function cost_prices() {
@@ -2507,252 +2265,6 @@ class SynergyWholesale_API
         return $response['domainList'];
     }
 
-    // if (
-    //     class_exists('\WHMCS\Domains\DomainLookup\SearchResult') &&
-    //     class_exists('\WHMCS\Domains\DomainLookup\ResultsList')
-    // ) {
-
-    //     /**
-    //      * Check Domain Availability.
-    //      *
-    //      * Determine if a domain or group of domains are available for
-    //      * registration or transfer.
-    //      *
-    //      * @param array $params common module parameters
-    //      * @see https://developers.whmcs.com/domain-registrars/module-parameters/
-    //      *
-    //      * @see \WHMCS\Domains\DomainLookup\SearchResult
-    //      * @see \WHMCS\Domains\DomainLookup\ResultsList
-    //      *
-    //      * @throws Exception Upon domain availability check failure.
-    //      *
-    //      * @return \WHMCS\Domains\DomainLookup\ResultsList An ArrayObject based collection of \WHMCS\Domains\DomainLookup\SearchResult results
-    //      */
-    //     function synergywholesaledomains_CheckAvailability(array $params)
-    //     {
-    //         $type = App::isInRequest('epp') ? 'transfer' : 'register';
-
-    //         try {
-    //             $list = [];
-    //             foreach ($params['tldsToInclude'] as $tld) {
-    //                 $list[] = $params['sld'] . $tld;
-    //             }
-
-    //             $check = $this->synergywholesaledomains_apiRequest('bulkCheckDomain', $params, [
-    //                 'domainList' => $list,
-    //                 'command' => ('register' === $type ? 'create' : $type),
-    //             ], true, false);
-
-    //             $results = new WHMCS\Domains\DomainLookup\ResultsList();
-
-    //             foreach ($check['domainList'] as $domain) {
-    //                 list($sld, $tld) = explode('.', $domain->domain, 2);
-
-    //                 $searchResult = new WHMCS\Domains\DomainLookup\SearchResult($sld, '.' . $tld);
-
-    //                 $status = WHMCS\Domains\DomainLookup\SearchResult::STATUS_NOT_REGISTERED;
-
-    //                 if ('transfer' === $type && $domain->available) {
-    //                     $status = WHMCS\Domains\DomainLookup\SearchResult::STATUS_REGISTERED;
-    //                 }
-
-    //                 if ('register' === $type && !$domain->available) {
-    //                     $status = WHMCS\Domains\DomainLookup\SearchResult::STATUS_REGISTERED;
-    //                 }
-
-    //                 if (
-    //                     (!empty($domain->premium) && !$params['premiumEnabled'] && $domain->available) ||
-    //                     (!empty($domain->premium) && empty($domain->costPrice))
-    //                 ) {
-    //                     $status = WHMCS\Domains\DomainLookup\SearchResult::STATUS_RESERVED;
-    //                 }
-
-    //                 $searchResult->setStatus($status);
-
-    //                 if ($domain->premium && $params['premiumEnabled'] && $domain->available) {
-    //                     $searchResult->setPremiumDomain(true);
-    //                     $searchResult->setPremiumCostPricing([
-    //                         'renew' => $domain->costPrice,
-    //                         $type => $domain->costPrice,
-    //                         'CurrencyCode' => 'AUD',
-    //                     ]);
-    //                 }
-
-    //                 $results->append($searchResult);
-    //             }
-
-    //             /**
-    //              * This is a bit of a hack, but is required to makes premium transfer work.
-    //              *
-    //              * @see cart.php#L207-231 of 7.4.1 source.
-    //              */
-    //             if ('transfer' === $type) {
-    //                 $premiumSessionData = [];
-    //                 foreach ($results as $domain) {
-    //                     $domain = $domain->toArray();
-    //                     if ($domain['isPremium']) {
-    //                         $premiumSessionData[$domain['domainName']] = [
-    //                             'markupPrice' => $domain['pricing'],
-    //                             'cost' => $domain['premiumCostPricing'],
-    //                         ];
-    //                     }
-    //                 }
-
-    //                 $storedSessionData = WHMCS\Session::get('PremiumDomains');
-    //                 if (is_array($storedSessionData)) {
-    //                     $premiumSessionData = array_merge($storedSessionData, $premiumSessionData);
-    //                 }
-
-    //                 WHMCS\Session::set('PremiumDomains', $premiumSessionData);
-    //             }
-
-    //             return $results;
-    //         } catch (\Exception $e) {
-    //             return [
-    //                 'error' => $e->getMessage(),
-    //             ];
-    //         }
-    //     }
-
-    //     /**
-    //      * Synergy Wholesale does not utilise this method.
-    //      *
-    //      * @param array $params common module parameters
-    //      * @see https://developers.whmcs.com/domain-registrars/module-parameters/
-    //      *
-    //      * @return \WHMCS\Domains\DomainLookup\ResultsList An ArrayObject based collection of \WHMCS\Domains\DomainLookup\SearchResult results
-    //      */
-    //     function synergywholesaledomains_GetDomainSuggestions(array $params)
-    //     {
-    //         return new WHMCS\Domains\DomainLookup\ResultsList();
-    //     }
-
-    //     function synergywholesaledomains_GetPremiumPrice(array $params)
-    //     {
-    //         $pricing = [
-    //             'CurrencyCode' => 'AUD',
-    //         ];
-
-    //         try {
-    //             foreach ($params['type'] as $type) {
-    //                 $type = strtolower($type);
-    //                 $check = $this->synergywholesaledomains_apiRequest('checkDomain', $params, [
-    //                     'command' => ('register' === $type ? 'create' : $type),
-    //                 ]);
-
-    //                 $pricing[$type] = $check->costPrice;
-    //             }
-
-    //             return $pricing;
-    //         } catch (\Exception $e) {
-    //             return [
-    //                 'error' => $e->getMessage(),
-    //             ];
-    //         }
-    //     }
-    // }
-
-    // if (class_exists('\WHMCS\Domain\TopLevel\ImportItem') && class_exists('\WHMCS\Results\ResultsList')) {
-    //     function synergywholesaledomains_GetTldPricing(array $params)
-    //     {
-    //         try {
-    //             $response = $this->synergywholesaledomains_apiRequest('getDomainPricing', $params);
-    //         } catch (\Exception $e) {
-    //             return [
-    //                 'error' => $e->getMessage(),
-    //             ];
-    //         }
-
-    //         $results = new WHMCS\Results\ResultsList();
-
-    //         foreach ($response['pricing'] as $extension) {
-    //             $tld = '.' . $extension->tld;
-    //             $transfer_price = $extension->transfer;
-    //             if (preg_match('/\.au$/', $tld)) {
-    //                 $transfer_price = 0.00;
-    //             }
-
-    //             $results[] = (new WHMCS\Domain\TopLevel\ImportItem())
-    //                 ->setExtension($tld)
-    //                 ->setMinYears($extension->minPeriod)
-    //                 ->setMaxYears($extension->maxPeriod)
-    //                 ->setRegisterPrice($extension->register_1_year)
-    //                 ->setRenewPrice($extension->renew)
-    //                 ->setTransferPrice($transfer_price)
-    //                 ->setRedemptionFeePrice($extension->redemption)
-    //                 ->setRedemptionFeeDays($extension->cannotRenewWithin)
-    //                 ->setCurrency('AUD')
-    //                 ->setEppRequired(!preg_match('/\.uk$/', $tld))
-    //                 ->setGraceFeeDays($extension->canRenewWithin)
-    //                 ->setGraceFeePrice('0.00')
-    //             ;
-    //         }
-
-    //         return $results;
-    //     }
-    // }
-
-    // if (class_exists('\WHMCS\Domain\Registrar\Domain') && class_exists('\WHMCS\Carbon')) {
-    //     function synergywholesaledomains_GetDomainInformation(array $params)
-    //     {
-    //         try {
-    //             $response = $this->synergywholesaledomains_apiRequest('domainInfo', $params);
-    //         } catch (\Exception $e) {
-    //             return [
-    //                 'error' => $e->getMessage(),
-    //             ];
-    //         }
-
-    //         $status = constant('\WHMCS\Domain\Registrar\Domain::STATUS_ACTIVE');
-
-    //         if (isset($response['transfer_status'])) {
-    //             return (new WHMCS\Domain\Registrar\Domain())
-    //                 ->setDomain($response['domainName'])
-    //                 ->setRegistrationStatus($status)
-    //             ;
-    //         }
-
-    //         $nameservers = [];
-    //         foreach ($response['nameServers'] as $index => $value) {
-    //             $nameservers['ns' . ($index + 1)] = strtolower($value);
-    //         }
-
-    //         switch (strtolower($response['domain_status'])) {
-    //             case 'expired':
-    //             case 'clienthold':
-    //             case 'redemption':
-    //                 $status = constant('\WHMCS\Domain\Registrar\Domain::STATUS_EXPIRED');
-    //                 break;
-    //             case 'deleted':
-    //             case 'dropped':
-    //             case 'policydelete':
-    //                 $status = constant('\WHMCS\Domain\Registrar\Domain::STATUS_DELETED');
-    //                 break;
-    //             case 'outbound':
-    //             case 'transferaway':
-    //             case 'transferredaway':
-    //             case 'outbound_approved':
-    //                 $status = constant('\WHMCS\Domain\Registrar\Domain::STATUS_INACTIVE');
-    //                 break;
-    //             case 'domain does not exist':
-    //                 $status = constant('\WHMCS\Domain\Registrar\Domain::STATUS_ARCHIVED');
-    //                 break;
-    //         }
-
-    //         if ('Suspended' === $response['icannStatus']) {
-    //             $status = constant('\WHMCS\Domain\Registrar\Domain::STATUS_SUSPENDED');
-    //         }
-
-    //         return (new WHMCS\Domain\Registrar\Domain())
-    //             ->setDomain($response['domainName'])
-    //             ->setNameservers($nameservers)
-    //             ->setTransferLock('clientTransferProhibited' === $response['domain_status'])
-    //             ->setExpiryDate(WHMCS\Carbon::createFromFormat('Y-m-d H:i:s', $response['domain_expiry']))
-    //             ->setIdProtectionStatus('Enabled' === $response['idProtect'])
-    //             ->setRegistrationStatus($status)
-    //         ;
-    //     }
-    // }
 
 
 

@@ -87,8 +87,6 @@ class SynergyWholesale
 
         $servers = Registrar::whois_server($tlds);
 
-        //$this->error = var_dump_str($servers); return false;
-
         $result = [];
 
         foreach ($tlds as $t) {
