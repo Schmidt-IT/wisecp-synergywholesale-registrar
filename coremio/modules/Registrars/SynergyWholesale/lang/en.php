@@ -15,9 +15,9 @@ return [
     'desc'              => [
         'username'      => '',
         'password'      => '',
-        'WHiddenAmount' => '<br>Ask for a fee for whois protection service.',
+        'WHiddenAmount' => '<br>Ask for fee whois protection service.',
         'test-mode'     => 'Use API in test mode.',
-        'adp'           => 'It automatically pulls costs every day and defines the sales prices for the profit rate you specify.',
+        'adp'           => 'Automatically retrieve costs every day and update the sale prices with the profit rate you specify.',
         'cost-currency' => '',
         'import-tld-1'  => 'Automatically import all extensions registered on the API.',
         'import-tld-2'  => 'All domain extensions and costs registered on the API will be imported collectively.',

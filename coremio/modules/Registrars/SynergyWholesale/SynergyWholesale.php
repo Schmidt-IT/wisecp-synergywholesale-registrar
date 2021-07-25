@@ -28,7 +28,6 @@ class SynergyWholesale
         }
 
         // Set API Credentials
-
         $username = $this->config["settings"]["username"];
         $password = $this->config["settings"]["password"];
         $password = Crypt::decode($password, Config::get("crypt/system"));
