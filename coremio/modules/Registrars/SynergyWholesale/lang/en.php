@@ -16,7 +16,7 @@ return [
         'username'      => '',
         'password'      => '',
         'WHiddenAmount' => '<br>Ask for a fee for whois protection service.',
-        'test-mode'     => 'Activate to process in test mode.',
+        'test-mode'     => 'Use API in test mode.',
         'adp'           => 'It automatically pulls costs every day and defines the sales prices for the profit rate you specify.',
         'cost-currency' => '',
         'import-tld-1'  => 'Automatically import all extensions registered on the API.',
