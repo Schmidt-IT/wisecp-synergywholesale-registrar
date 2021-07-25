@@ -163,7 +163,7 @@ class SynergyWholesale
         ];
 
         // This result should return if the domain name was registered successfully or was previously registered.
-        $returnData = $this->api->synergywholesaledomains_RegisterDomain($params);
+        $returnData = $this->api->register_domain($params);
         if (!$returnData) {
             $this->error = $this->api->error;
             return false;
@@ -207,7 +207,7 @@ class SynergyWholesale
         $params['whois']['adminEMail'] = $params['whois']['EMail'];
         $params['whois']['adminCompany'] = $params['whois']['Company'];
 
-        $returnData = $this->api->synergywholesaledomains_TransferDomain($params);
+        $returnData = $this->api->transfer_domain($params);
         if (!$returnData) {
             $this->error = $this->api->error;
             return false;
@@ -236,7 +236,7 @@ class SynergyWholesale
         $params['premiumEnabled'] = 0;
         $params['premiumCost'] = '';
 
-        $response = $this->api->synergywholesaledomains_RenewDomain($params);
+        $response = $this->api->renew_domain($params);
         if (!$response) {
             $this->error = $this->api->error;
             return false;
@@ -275,7 +275,7 @@ class SynergyWholesale
     {
         $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
-        $details = $this->api->synergywholesaledomains_getNameservers($params);
+        $details = $this->api->get_nameservers($params);
 
         if (!$details) {
             $this->error = $this->api->error;
@@ -299,7 +299,7 @@ class SynergyWholesale
 
         $params['nameServers'] = $dns;
 
-        $modifyDns = $this->api->synergywholesaledomains_SaveNameservers($params);
+        $modifyDns = $this->api->save_nameservers($params);
         if (!$modifyDns) {
             $this->error = $this->api->error;
             return false;
@@ -382,7 +382,7 @@ class SynergyWholesale
         // $params["appPurpose"] = "P1"; //commercial
 
 
-        $modify = $this->api->synergywholesaledomains_SaveContactDetails($params);
+        $modify = $this->api->save_contact_details($params);
 
         if (!$modify) {
             $this->error = $this->api->error;
@@ -396,7 +396,7 @@ class SynergyWholesale
     {
         $params["domainName"] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
         $details = $this->api->get_details($params);
-        $this->error = var_dump_str($details);
+        // $this->error = var_dump_str($details);
         return false;
 
         if (!$details) {
@@ -413,8 +413,8 @@ class SynergyWholesale
         $params['domainName'] = $domain;
         $params['tld'] = $domain; // TODO
 
-        $details    = $this->api->synergywholesaledomains_GetRegistrarLock($params);
-        $this->error = var_dump_str($details);
+        $details    = $this->api->get_registrar_lock($params);
+        // $this->error = var_dump_str($details);
         return false;
 
         if (!$details) {
@@ -430,7 +430,7 @@ class SynergyWholesale
         $params["domainName"] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
         $details = $this->api->get_details($params);
-        $this->error = var_dump_str($details);
+        // $this->error = var_dump_str($details);
         return false;
 
         if (!$details) {
@@ -450,7 +450,7 @@ class SynergyWholesale
     {
         $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
-        $modify = $this->api->synergywholesaledomains_SaveRegistrarLock($params, $status == "enable" ? "lockDomain" : "unlockDomain");
+        $modify = $this->api->save_registrar_lock($params, $status == "enable" ? "lockDomain" : "unlockDomain");
 
 
         if (!$modify) {
@@ -467,7 +467,7 @@ class SynergyWholesale
         $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
         $params['protectenable'] = $status == "enable";
 
-        $modify = $this->api->synergywholesaledomains_IDProtectToggle($params);
+        $modify = $this->api->id_protect_toggle($params);
 
         if (!$modify) {
             $this->error = $this->api->error;
@@ -507,8 +507,8 @@ class SynergyWholesale
     {
         $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
-        $details = $this->api->synergywholesaledomains_GetEPPCode($params);
-        $this->error = var_dump_str($details);
+        $details = $this->api->get_epp_code($params);
+        // $this->error = var_dump_str($details);
         if (!$details) {
             $this->error = $this->api->error;
             return false;
@@ -606,7 +606,7 @@ class SynergyWholesale
         foreach ($details['nameServers'] as $index => $value) {
             $result['ns' . ($index + 1)] = strtolower($value);
         }
-        $whois_data = $this->api->synergywholesaledomains_GetContactDetails($params);
+        $whois_data = $this->api->get_contact_details($params);
         $whois_data = isset($whois_data["Registrant"]) ? $whois_data["Registrant"] : [];
 
         if ($whois_data) {
