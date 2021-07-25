@@ -15,7 +15,7 @@ return [
     'desc'              => [
         'username'      => '',
         'password'      => '',
-        'WHiddenAmount' => '<br>Ask for fee whois protection service.',
+        'WHiddenAmount' => '<br>WHOIS protection service fee.',
         'test-mode'     => 'Use API in test mode.',
         'adp'           => 'Automatically retrieve costs every day and update the sale prices with the profit rate you specify.',
         'cost-currency' => '',
