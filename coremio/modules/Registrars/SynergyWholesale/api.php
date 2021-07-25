@@ -5,13 +5,8 @@
 // https://synergywholesale.com/faq/article/api-whmcs-modules/
 
 define('API_ENDPOINT', 'https://api.synergywholesale.com/');
-define('FRONTEND', 'https://manage.synergywholesale.com');
-define('WHOIS_URL', 'https://manage.synergywholesale.com/home/whmcs-whois-json');
-// define('WHATS_MY_IP_URL', 'https://manage.synergywholesale.com/ip');
-define('WHATS_MY_IP_URL', 'https://ip.seby.io');
-define('SW_MODULE_NAME', 'synergywholesaledomains');
-define('SW_MODULE_VERSION', '0');
-define('MODULE_VERSION', '0');
+// define('FRONTEND', 'https://manage.synergywholesale.com');
+// define('WHOIS_URL', 'https://manage.synergywholesale.com/home/whmcs-whois-json');
 
 function var_dump_str($var) {
     ob_start();
@@ -62,36 +57,10 @@ class SynergyWholesale_API
         curl_setopt($this->curl, CURLOPT_HTTPHEADER, array("Content-Type: text/xml; charset=UTF-8"));
     }
 
-    private function synergywholesaledomains_webRequest($url, $method = 'GET', array $params = [])
-    {
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, $url);
-        curl_setopt($curl, CURLOPT_ENCODING, "gzip");
-        curl_setopt($curl, CURLOPT_TIMEOUT, 5);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-
-        if ('POST' === $method) {
-            curl_setopt($curl, CURLOPT_POST, true);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($params));
-        }
-
-        $response = curl_exec($curl);
-
-        if (0 !== curl_errno($curl)) {
-            $info = curl_getinfo($curl);
-            $this->error = 'Curl error: ' . $info[CURLINFO_RESPONSE_CODE] . ':' . curl_error($curl);
-            return false;
-        }
-
-        curl_close($curl);
-        return $response;
-    }
-
     function helper_get_domain(array $params)
     {
         return $params['sld'] . '.' . $params['tld'];
     }
-
 
     // convert nameservers from flat names (params["nsX"]) to array
     function synergywholesaledomains_helper_getNameservers(array $params)
@@ -173,6 +142,9 @@ class SynergyWholesale_API
         return get_object_vars($response);
     }
 
+    /**
+     * Test balanceQuery endpoint
+     */
     public function login()
     {
         $response = $this->synergywholesaledomains_api_request('balanceQuery');
@@ -272,7 +244,6 @@ class SynergyWholesale_API
         return $this->synergywholesaledomains_api_request('domainInfo', $params, $request);
     }
 
-
     // list Child Nameservers of a domain
     function get_child_nameservers($params) {
         $request['domainName'] = $params['domainName'];
@@ -364,8 +335,6 @@ class SynergyWholesale_API
             'nameServers' => $params['nameServers'],
         ];
 
-        // TODO: Add hostname validation onto the provided nameservers.
-
         $response = $this->synergywholesaledomains_api_request('updateNameServers', $params, $request);
         if (!$response) {
             return false;
@@ -420,20 +389,6 @@ class SynergyWholesale_API
             return false;
         }
     }
-
-    // /**
-    //  * .UK domain push function.
-    //  *
-    //  * @param array $params
-    //  *
-    //  * @return array
-    //  */
-    // function synergywholesaledomains_ReleaseDomain(array $params)
-    // {
-    //     return $this->$this->synergywholesaledomains_api_request('domainReleaseUK', $params, [
-    //         'tagName' => $params['transfertag'],
-    //     ], false);
-    // }
 
     /**
      * Domain name registration function.
@@ -544,12 +499,6 @@ class SynergyWholesale_API
 
         try {
             $this->synergywholesaledomains_api_request('domainRegister', $params, $request, true);
-            // $returnData = [
-            //     'status' => "SUCCESS",
-            //     'config' => [
-            //         'entityID' => 1,
-            //     ],
-            // ];
             return true;
         } catch (\Exception $e) {
             $this->error = $e->getMessage();
@@ -1023,11 +972,9 @@ class SynergyWholesale_API
         }
     }
 
-    /*
-        This function will validate the supplied country code
-         */
-
     /**
+     * This function will validate the supplied country code
+     *
      * @param  $country
      * @return bool
      */
@@ -1048,19 +995,14 @@ class SynergyWholesale_API
         return in_array(strtoupper($country), $ccArray);
     }
 
-    /*
-
-        This function will return a valid au state name
-
-         */
-
     /**
+     * This function will return a valid au state name
+     *
      * @param string $state
      * @return bool|string
      */
     function validate_au_state($state)
     {
-
         // Remove any spaces from the state
         $state = preg_replace('/\s|\./', '', $state);
 
@@ -1111,243 +1053,6 @@ class SynergyWholesale_API
         return $response['pricing'];
     }
 
-    // function synergywholesaledomains_sync_adhoc(array $params)
-    // {
-    //     try {
-    //         $domainInfo = Capsule::table('tbldomains')
-    //             ->where('id', $params['domainid'])
-    //             ->first();
-    //     } catch (\Exception $e) {
-    //         $this->error = $e->getMessage();
-    //         return false;
-    //     }
-
-    //     if ('Pending Transfer' === $domainInfo->status) {
-    //         return $this->synergywholesaledomains_adhocTransferSync($params, $domainInfo);
-    //     }
-
-    //     return $this->synergywholesaledomains_adhocSync($params, $domainInfo);
-    // }
-
-    // /**
-    //  * This function syncs domain transfers via "Sync" button in the admin panel.
-    //  *
-    //  * @param      array   $params      The parameters
-    //  * @param      object  $domainInfo  The domain information
-    //  *
-    //  * @return     array   ( description_of_the_return_value )
-    //  */
-    // function synergywholesaledomains_adhocTransferSync(array $params, $domainInfo)
-    // {
-    //     global $_LANG, $CONFIG;
-
-    //     $response = $this->synergywholesaledomains_TransferSync($params);
-    //     $update = $syncMessages = [];
-    //     if (isset($response['error'])) {
-    //         return $response;
-    //     }
-
-    //     if ($response['failed'] && 'Cancelled' != $domainInfo->status) {
-    //         $update['status'] = 'Cancelled';
-    //         $errorMessage = (isset($response['reason']) ? $response['reason'] : $_LANG['domaintrffailreasonunavailable']);
-    //     } elseif ($response['completed']) {
-    //         $response = $this->synergywholesaledomains_Sync($params);
-    //         if ($response['active'] && 'Active' != $domainInfo->status) {
-    //             $update['status'] = 'Active';
-    //             $syncMessages[] = sprintf('Status updated from %s to Active', $domainInfo->status);
-    //             //sendMessage('Domain Transfer Completed', $domainInfo->id);
-    //         }
-
-    //         if ($response['expirydate']) {
-    //             $newBillDate = $update['expirydate'] = $response['expirydate'];
-    //             if ($CONFIG['DomainSyncNextDueDate'] && $CONFIG['DomainSyncNextDueDateDays']) {
-    //                 $unix_expiry = strtotime($response['expirydate']);
-    //                 $newBillDate = date('Y-m-d', strtotime(sprintf('-%d days', $CONFIG['DomainSyncNextDueDateDays']), $unix_expiry));
-    //             }
-
-    //             $update['nextinvoicedate'] = $update['nextduedate'] = $newBillDate;
-    //         }
-    //     }
-
-    //     if (!empty($update)) {
-    //         try {
-    //             $update['synced'] = 1;
-
-    //             Capsule::table('tbldomains')
-    //                 ->where('id', $params['domainid'])
-    //                 ->update($update);
-    //         } catch (\Exception $e) {
-    //             $this->error = 'Error updating domain; ' . $e->getMessage();
-    //             return false;
-    //         }
-    //     }
-
-    //     if (isset($errorMessage)) {
-    //         $this->error = $errorMessage;
-    //         return false;
-    //     }
-
-    //     global $domainstatus, $nextduedate, $expirydate;
-    //     if (isset($update['status'])) {
-    //         $domainstatus = $update['status'];
-    //     }
-
-    //     if (isset($update['nextduedate'])) {
-    //         $nextduedate = str_replace('-', '/', $update['nextduedate']);
-    //         $nextduedate = date('d/m/Y', strtotime($nextduedate));
-    //     }
-
-    //     if (isset($update['expirydate'])) {
-    //         $expirydate = str_replace('-', '/', $update['expirydate']);
-    //         $expirydate = date('d/m/Y', strtotime($expirydate));
-    //     }
-
-    //     $hookName = '';
-    //     switch ($update['status']) {
-    //         case 'Active':
-    //             $hookName = 'DomainTransferCompleted';
-    //             break;
-    //         case 'Cancelled':
-    //             $hookName = 'DomainTransferFailed';
-    //             break;
-    //     }
-
-    //     if (!empty($hookName)) {
-    //         run_hook(
-    //             $hookName,
-    //             [
-    //                 'domainId' => $params['domainid'],
-    //                 'domain' => $params['domainname'],
-    //                 'expiryDate' => $update['expirydate'],
-    //                 'registrar' => $params['registrar'],
-    //             ]
-    //         );
-    //     }
-
-    //     return [
-    //         'message' => nl2br(
-    //             empty($syncMessages) ?
-    //                 'Domain Sync successful.' :
-    //                 'Updated;\n    - ' . implode('\n    - ', $syncMessages)
-    //         )
-    //     ];
-    // }
-
-    // /**
-    //  * This function syncs domain names via "Sync" button in the admin panel.
-    //  *
-    //  * Most of the stuff we are updating here is to actually update the interface. This is
-    //  * because the interface has the data fetched prior to this function running.
-    //  *
-    //  * @param      array   $params      The parameters
-    //  * @param      object  $domainInfo  The domain information from the DB
-    //  *
-    //  * @return     array   Returns a message containing the updated information.
-    //  */
-    // function synergywholesaledomains_adhocSync(array $params, $domainInfo)
-    // {
-    //     global $CONFIG;
-
-    //     $response = $this->synergywholesaledomains_Sync($params);
-    //     $syncMessages = $update = [];
-    //     if (isset($response['error'])) {
-    //         return $response;
-    //     }
-
-    //     if ($response['active'] && 'Active' != $domainInfo->status) {
-    //         $update['status'] = 'Active';
-    //     }
-
-    //     if ($response['expired'] && 'Expired' != $domainInfo->status) {
-    //         $update['status'] = 'Expired';
-    //     }
-
-    //     if ($response['cancelled'] && 'Active' == $domainInfo->status) {
-    //         $update['status'] = 'Cancelled';
-    //     }
-
-    //     if (isset($response['transferredAway']) && $response['transferredAway'] && 'Transferred Away' != $domainInfo->status) {
-    //         $update['status'] = 'Transferred Away';
-    //     }
-
-    //     if (isset($update['status'])) {
-    //         $syncMessages[] = sprintf("Status from '%s' to '%s'", $domainInfo->status, $update['status']);
-    //         $domainstatus = $update['status'];
-    //     }
-
-    //     if ($response['expirydate'] && $domainInfo->expirydate != $response['expirydate']) {
-    //         $update['expirydate'] = $response['expirydate'];
-    //         $diExpiryFormat = date('d/m/Y', strtotime($domainInfo->expirydate));
-    //         $updateExpiryFormat = date('d/m/Y', strtotime($update['expirydate']));
-    //         $syncMessages[] = sprintf("Expiry date from '%s' to '%s'", $diExpiryFormat, $updateExpiryFormat);
-    //     }
-
-    //     if ($response['expirydate']) {
-    //         $newBillDate = $update['expirydate'] = $response['expirydate'];
-    //         if ($CONFIG['DomainSyncNextDueDate'] && $CONFIG['DomainSyncNextDueDateDays']) {
-    //             $unix_expiry = strtotime($response['expirydate']);
-    //             $newBillDate = date('Y-m-d', strtotime(sprintf('-%d days', $CONFIG['DomainSyncNextDueDateDays']), $unix_expiry));
-    //         }
-
-    //         if ($newBillDate != $domainInfo->nextinvoicedate) {
-    //             $update['nextinvoicedate'] = $update['nextduedate'] = $newBillDate;
-    //             $diInvoiceDateFormat = date('d/m/Y', strtotime($domainInfo->nextinvoicedate));
-    //             $updateBillDateFormat = date('d/m/Y', strtotime($newBillDate));
-    //             $syncMessages[] = sprintf("Next Due Date from '%s' to '%s'", $diInvoiceDateFormat, $updateBillDateFormat);
-    //         }
-    //     }
-
-    //     if (!empty($update)) {
-    //         try {
-    //             $update['synced'] = 1;
-
-    //             Capsule::table('tbldomains')
-    //                 ->where('id', $params['domainid'])
-    //                 ->update($update);
-    //         } catch (\Exception $e) {
-    //             $this->error = 'Error updating domain; ' . $e->getMessage();
-    //             return false;
-    //         }
-    //     }
-
-    //     global $domainstatus, $nextduedate, $expirydate, $recurringamount, $isPremium, $idprotection;
-    //     if (isset($update['status'])) {
-    //         $domainstatus = $update['status'];
-    //     }
-
-    //     if (isset($update['nextduedate'])) {
-    //         $nextduedate = fromMySQLDate($update['nextduedate']);
-    //     }
-
-    //     if (isset($update['expirydate'])) {
-    //         $expirydate = fromMySQLDate($update['expirydate']);
-    //     }
-
-    //     $domain = Capsule::table('tbldomains')
-    //         ->where('id', $params['domainid'])
-    //         ->first();
-
-    //     if ($isPremium != $domain->is_premium) {
-    //         if ($domain->is_premium) {
-    //             $syncMessages[] = 'Domain has been identified as premium.';
-    //         } else {
-    //             $syncMessages[] = 'Domain is no longer identified as premium.';
-    //         }
-    //     }
-
-    //     $idprotection = $domain->idprotection;
-    //     $recurringamount = $domain->recurringamount;
-    //     $isPremium = $domain->is_premium;
-
-    //     return [
-    //         'message' => nl2br(
-    //             empty($syncMessages) ?
-    //                 'Domain Sync successful.' :
-    //                 "Updated;\n    - " . implode("\n    - ", $syncMessages)
-    //         )
-    //     ];
-    // }
-
     function get_domains($page=1, $pageSize=100) {
         // paginated request
         $request['page'] = $page;
@@ -1367,8 +1072,4 @@ class SynergyWholesale_API
         }
         return $response['domainList'];
     }
-
-
-
-
 }
