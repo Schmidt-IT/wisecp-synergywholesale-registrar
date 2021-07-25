@@ -350,16 +350,13 @@ class SynergyWholesale
         $old_ns = idn_to_ascii($old["ns"], 0, INTL_IDNA_VARIANT_UTS46);
         $new_ns = idn_to_ascii($new_ns, 0, INTL_IDNA_VARIANT_UTS46);
 
-        $this->error = "Modifying Child Nameservers is not supported";
-        return false;
+        $modify = $this->api->modify_child_nameserver($params,$old_ns,$new_ns,$new_ip);
+        if(!$modify){
+            $this->error = $this->api->error;
+            return false;
+        }
 
-        // $modify     = $this->api->modify_child_nameserver($domain,$old_ns,$new_ns,$new_ip);
-        // if(!$modify){
-        //     $this->error = $this->api->error;
-        //     return false;
-        // }
-
-        // return true;
+        return true;
     }
 
     public function DeleteCNS($params = [], $ns = '', $ip = '')

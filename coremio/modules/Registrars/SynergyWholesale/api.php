@@ -338,186 +338,19 @@ class SynergyWholesale_API
     }
 
     // Modify a Child Nameserver from a domain
-    // function modify_child_nameserver($params, $ns, $ip) {
-    //     $request['domainName'] = $params['domainName'];
-    //     $request['host'] = $ns;
-    //     $request['ipAddress'] = $ip;
-    //     return $this->synergywholesaledomains_apiRequest('deleteHostIP', $params, $request);
-    // }
+    // Only support 1 IP per hostname
+    function modify_child_nameserver($params, $old_ns, $new_ns, $new_ip) {
+        $delete = $this->delete_child_nameserver($params, $old_ns);
+        if(!$delete) {
+            return false;
+        }
 
-    /*
-         * Returns the configuration for the Synergy Wholesale WHMCS domains module.
-         *
-         * @param array $params
-         *
-         * @return array
-         */
-    // function synergywholesaledomains_getConfigArray(array $params)
-    // {
-    //     $configuration = [
-    //         'Description' => [
-    //             'Value' => 'Not a Synergy Wholesale partner yet? Become one now: <a target="_blank" href="https://synergywholesale.com/become-a-partner/">https://synergywholesale.com/become-a-partner/</a>',
-    //             'Type' => 'System',
-    //         ],
-    //         'FriendlyName' => [
-    //             'Value' => 'Synergy Wholesale',
-    //             'Type' => 'System',
-    //         ],
-    //         'resellerID' => [
-    //             'FriendlyName' => 'Reseller ID',
-    //             'Type' => 'text',
-    //             'Size' => '15',
-    //             'Description' => 'Enter your Reseller ID here',
-    //         ],
-    //         'apiKey' => [
-    //             'FriendlyName' => 'API Key',
-    //             'Type' => 'text',
-    //             'Size' => '45',
-    //             'Description' => 'Enter your API Key here',
-    //         ],
-    //         'doRenewal' => [
-    //             'FriendlyName' => 'Force .AU Renewal on Transfer',
-    //             'Type' => 'yesno',
-    //             'Size' => '1',
-    //             'Description' => 'Tick if you wish to perform a renewal on any .au domains submitted for transfer that are within 90 days of expiry.',
-    //         ],
-    //         'test_api_connection' => [
-    //             'FriendlyName' => 'Check API Connectivity',
-    //             'Type' => 'yesno',
-    //             'Description' => 'Enable to see connectivity status to the Synergy Wholesale API',
-    //         ],
-    //         'whoisUpdate' => [
-    //             'FriendlyName' => 'Force update WHOIS.json',
-    //             'Type' => 'yesno',
-    //             'Description' => 'Enable this option to force update the WHOIS.json data<br><b>NOTE:</b> This option will be disabled automatically again once you have clicked \'Save Changes\' and the update sequence is completed.',
-    //         ],
-    //         'Version' => [
-    //             'Description' => 'This module version: ' . SW_MODULE_VERSION,
-    //         ],
-    //         '' => [
-    //             'Description' => '<b>Having trouble?</b> Login to the Synergy Wholesale Management Console and <a style="text-decoration:underline;" target="_blank" href="https://{{FRONTEND}}/home/support/new">create a new support request.</a>',
-    //         ],
-    //     ];
-
-    //     if (isset($this->test_mode) && '1' === $this->test_mode) {
-    //         $params['test_api_connection'] = 'on';
-    //         try {
-    //             $ipAddress = $this->synergywholesaledomains_webRequest(WHATS_MY_IP_URL);
-    //         } catch (\Exception $e) {
-    //             $ipAddress = $_SERVER['SERVER_ADDR'];
-    //         }
-
-    //         try {
-    //             $responseCode = 200;
-    //             $this->synergywholesaledomains_webRequest(API_ENDPOINT);
-    //         } catch (\Exception $e) {
-    //             $responseCode = $e->getCode();
-    //         }
-
-    //         $apiAuth = 'N/A';
-    //         switch ($responseCode) {
-    //             case 200:
-    //                 $message = '<b style="color:#1EB600">200 - Successful</b>';
-    //                 try {
-    //                     $balance = $this->$this->synergywholesaledomains_apiRequest('balanceQuery', $params);
-    //                     $apiAuth = '<b style="color:#1EB600">OK</b>';
-    //                 } catch (\Exception $e) {
-    //                     $apiAuth = '<b style="color:#FF0000;">' . $e->getMessage() . '</b>';
-    //                 }
-    //                 break;
-    //             case 403:
-    //                 // TODO: Add message about what to do here.
-    //                 $message = '<b style="color:#FF0000;">403 - Access Denied</b>';
-    //                 break;
-    //             default:
-    //                 $message = '<b style="color:#FF0000;">Unable to connect: <i>Check firewall, or submit <a style="color:#FF0000;text-decoration:underline;" target="_blank" href="https://{{FRONTEND}}/home/support/new">Support Request</a></i></b>';
-    //                 break;
-    //         }
-
-    //         $configuration['test_api_connection']['Description'] = nl2br(trim("
-    //                 Disable to hide connectivity status to the Synergy Wholesale API
-    //                 <i>This should be disabled unless configuring</i>\n
-    //                 This WHMCS installation's IP Address is <b>$ipAddress</b>
-    //                 <i>You will need to whitelist this IP address for the API usage within <a style=\"text-decoration:underline;\" target=\"_blank\" href=\"https://{{FRONTEND}}/home/resellers/api\">Synergy Wholesale > API Information</a></i>\n
-    //                 Production API Whitelisting: $message
-    //                 Production API Authentication: $apiAuth
-    //             "));
-    //     }
-
-    //     // Check to see if we are configured to connect, then attempt to retrieve the latest version
-    //     if (!empty($params['apiKey']) && !empty($params['resellerID'])) {
-    //         try {
-    //             $modules = $this->$this->synergywholesaledomains_apiRequest('getWHMCSModulesVersions', $params);
-    //             foreach ($modules as $module) {
-    //                 if ('domains' !== $module->key) {
-    //                     continue;
-    //                 }
-
-    //                 if ($module->moduleVersion <= MODULE_VERSION) {
-    //                     // No need to display new version, we have the latest version
-    //                     $configuration['Version']['Description'] .= '<br>You are currently running the latest module version available';
-    //                 } else {
-    //                     // Display new module data
-    //                     $configuration['Version']['Description'] .= '<br>Latest Available Version: ' . $module->moduleVersion . '<br>Download latest version from <a href="https://synergywholesale.com/faq/api-documentation-whmcs-modules" target="_blank">here</a>';
-    //                 }
-    //             }
-    //         } catch (\Exception $e) {
-    //             /* Silence */
-    //         }
-    //     }
-
-    //     // If the conversion option is ticked, then we need to process the conversion
-    //     if (isset($params['whoisUpdate']) && 'on' === $params['whoisUpdate']) {
-    //         $jsonPath = realpath(join(DIRECTORY_SEPARATOR, [__DIR__, '..', '..', '..', 'resources', 'domains', 'whois.json']));
-    //         $whoisBackup = file_get_contents($jsonPath);
-    //         $whois = file_get_contents(WHOIS_URL);
-
-    //         if (!file_exists($jsonPath)) {
-    //             $configuration['whoisUpdate']['Description'] .= "<br><b>NOTICE:</b> WHOIS.json update unsuccessful. File path invalid. The file at $jsonPath does not exist.";
-    //             return $configuration;
-    //         }
-
-    //         if ($whois === $whoisBackup) {
-    //             $configuration['whoisUpdate']['Description'] .= '<br><b>NOTICE:</b> WHOIS.json file is already up to date.';
-    //             return $configuration;
-    //         }
-
-    //         // Testing to see if retrieved data is valid
-    //         @json_decode($whois);
-    //         if (JSON_ERROR_NONE !== json_last_error()) {
-    //             $configuration['whoisUpdate']['Description'] .= '<br><b>NOTICE:</b> WHOIS.json update unsuccessful. Unable to pull file.';
-    //             return $configuration;
-    //         }
-
-    //         if (!file_put_contents($jsonPath, $whois)) {
-    //             $configuration['whoisUpdate']['Description'] .= '<br><b>NOTICE:</b> <span style="color:red;">WHOIS.json update unsuccessful. Unable to update WHOIS.json file.</span>';
-
-    //             //Revert any changes made to backup file
-    //             file_put_contents($filePath, $whoisBackup);
-
-    //             return $configuration;
-    //         }
-
-    //         $configuration['whoisUpdate']['Description'] .= '<br><b>NOTICE:</b> <span style="color:green;">WHOIS.json successfully updated.</span>';
-
-    //         try {
-    //             /**
-    //              * Finally disable the setting for the customer automatically so
-    //              * they don't have them needing to turn if off manually
-    //              */
-    //             Capsule::table('tblregistrars')->where([
-    //                 'registrar' => 'synergywholesaledomains',
-    //                 'setting' => 'whoisUpdate',
-    //             ])->update([
-    //                 'value' => 'off',
-    //             ]);
-    //         } catch (\Exception $e) {
-    //             $configuration['whoisUpdate']['Description'] .= '<br><b>NOTICE:</b> WHOIS.json successfully updated however we were unable to disable this option automatically for you. Please untick the option yourself manually and click \'Save Changes\' again.';
-    //         }
-    //     }
-
-    //     return $configuration;
-    // }
+        $addCNS = $this->add_child_nameserver($params, $new_ns, $new_ip);
+        if(!$addCNS) {
+            return false;
+        }
+        return true;
+    }
 
     /**
      * Get the nameservers from the Synergy Wholesale API via the "domainInfo" command.
