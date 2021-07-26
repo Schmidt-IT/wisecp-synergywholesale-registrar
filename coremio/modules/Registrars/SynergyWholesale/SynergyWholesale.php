@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * Synergy Wholesale Registrar Module for WISECP
+ *
+ * @copyright Copyright (c) Schmidt IT
+ * This file was modified under the MIT License from WISECP
+ * @license https://github.com/wisecp/sample-registrar-module/blob/master/LICENSE
+ * Source: https://github.com/wisecp/sample-registrar-module/blob/master/coremio/modules/Registrars/ExampleRegistrarModule/ExampleRegistrarModule.php
+ */
+
 class SynergyWholesale
 {
     public $api                = false;

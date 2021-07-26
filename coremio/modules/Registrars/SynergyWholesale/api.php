@@ -1,8 +1,13 @@
 <?php
-// https://dev.wisecp.com/en/kb/__construct
-// https://dev.wisecp.com/en/kb/create-a-query
-// https://dev.wisecp.com/en/kb/cctld-gtld-whois-server
-// https://synergywholesale.com/faq/article/api-whmcs-modules/
+
+/**
+ * Synergy Wholesale Registrar Module for WISECP
+ *
+ * @copyright Copyright (c) Schmidt IT
+ * This file was modified under the GNU General Public License v3.0 from Synergy Wholesale Pty Ltd 2020
+ * @license https://github.com/SynergyWholesale/WHMCS-Domains-Module/blob/master/LICENSE
+ * Source: https://github.com/SynergyWholesale/WHMCS-Domains-Module/blob/master/modules/registrars/synergywholesaledomains/synergywholesaledomains.php
+ */
 
 define('API_ENDPOINT', 'https://api.synergywholesale.com/');
 // define('FRONTEND', 'https://manage.synergywholesale.com');
