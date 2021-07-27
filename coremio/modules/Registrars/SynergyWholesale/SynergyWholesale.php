@@ -9,6 +9,11 @@
  * Source: https://github.com/wisecp/sample-registrar-module/blob/master/coremio/modules/Registrars/ExampleRegistrarModule/ExampleRegistrarModule.php
  */
 
+if (!function_exists('curl_init') or !function_exists('curl_exec') or !function_exists('curl_setopt'))
+    die('PHP Curl Library not found');
+
+static $temp_lfile;
+
 class SynergyWholesale
 {
     public $api                = false;
@@ -20,7 +25,6 @@ class SynergyWholesale
 
     function __construct($args = [])
     {
-
         $this->config = Modules::Config("Registrars", __CLASS__);
         $this->lang = Modules::Lang("Registrars", __CLASS__);
 
@@ -42,7 +46,131 @@ class SynergyWholesale
         $password = Crypt::decode($password, Config::get("crypt/system"));
 
         $sandbox = (bool)$this->config["settings"]["test-mode"];
+
+        $license_data   = $this->get_license_file_data();
+        $run_check      = $this->license_run_check($license_data);
+
+        if ($run_check) {
+            $domain     = str_replace("www.", "", $_SERVER["SERVER_NAME"]);
+            $directory  = __DIR__;
+            if (isset($_SERVER["HTTP_CLIENT_IP"])) {
+                $ip = $_SERVER["HTTP_CLIENT_IP"];
+            } elseif (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
+                $ip = $_SERVER["HTTP_X_FORWARDED_FOR"];
+            } else {
+                $ip = $_SERVER["REMOTE_ADDR"];
+            }
+
+            $server_ip  =  $_SERVER["SERVER_ADDR"];
+            $entered    =  "http://" . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"];
+            $referer    =  isset($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : '';
+            $address    =  "https://clients.schmidtit.com.au/license/checking/b48fc5a0a2550edb4e1a162b7bc0b442/68?";
+            $address    .= "domain=" . $domain;
+            $address    .= "&server_ip=" . $server_ip;
+            $address    .= "&user_ip=" . $ip;
+            $address    .= "&entered_url=" . $entered;
+            $address    .= "&referer_url=" . $referer;
+            $address    .= "&directory=" . $directory;
+            $resultErr  = false;
+            $result     = $this->use_license_curl($address, $resultErr);
+            if ($result == "OK") {
+                // License check succeeded.
+
+                $checkFileData      = $this->crypt_chip("encrypt", json_encode([
+                    'last-check-time' => date("Y-m-d H:i:s"),
+                    'next-check-time' => date("Y-m-d H:i:s", strtotime("+1 month")),
+                ]), "NlRpTmp4N21EL0MvWVdkODZqWWhKcGhSU3QrQUhFM2ZoTzUzTDhWVEJOa29FVUVaYjA1MGtGQldxVFN3UEs0Zw==");
+                file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . "LICENSE", $checkFileData);
+            } else {
+                $err = $this->use_license_curl("https://clients.schmidtit.com.au/license/error?user_ip=" . $ip, $resultErr);
+                if ($err == '') {
+                    $err = 'LICENSE CURL CONNECTION ERROR';
+                }
+                die($err);
+            }
+        }
+
         $this->api = new SynergyWholesale_API($username, $password, $sandbox);
+    }
+
+    function diff_day($start = '', $end = '')
+    {
+        $dStart = new DateTime($start);
+        $dEnd  = new DateTime($end);
+        $dDiff = $dStart->diff($dEnd);
+        return $dDiff->days;
+    }
+
+    function crypt_chip($action, $string, $salt = '')
+    {
+        if ($salt != 'NlRpTmp4N21EL0MvWVdkODZqWWhKcGhSU3QrQUhFM2ZoTzUzTDhWVEJOa29FVUVaYjA1MGtGQldxVFN3UEs0Zw==') return false;
+        $key    = "0|.%J.MF4AMT$(.VU1J" . $salt . "O1SbFd$|N83JG" . str_replace("www.", "", $_SERVER["SERVER_NAME"]) . ".~&/-_f?fge&";
+        $output = false;
+        $encrypt_method = "AES-256-CBC";
+        if ($key === null)
+            $secret_key = "NULL";
+        else
+            $secret_key = $key;
+        $secret_iv = '1EL0MvWVdkODZqWW';
+        $key = hash('sha256', $secret_key);
+        $iv = substr(hash('sha256', $secret_iv), 0, 16);
+        if ($action === 'encrypt') {
+            $output = openssl_encrypt($string, $encrypt_method, $key, 0, $iv);
+            $output = base64_encode($output);
+        } else if ($action === 'decrypt')
+            $output = openssl_decrypt(base64_decode($string), $encrypt_method, $key, 0, $iv);
+        return $output;
+    }
+
+    function get_license_file_data($reload = false)
+    {
+        global $temp_lfile;
+        if ($reload || !$temp_lfile) {
+            if (!file_exists(__DIR__ . DIRECTORY_SEPARATOR . "LICENSE")) {
+                return false;
+            }
+            $checkingFileData   = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . "LICENSE");
+            if ($checkingFileData) {
+                $checkingFileData   = $this->crypt_chip("decrypt", $checkingFileData, "NlRpTmp4N21EL0MvWVdkODZqWWhKcGhSU3QrQUhFM2ZoTzUzTDhWVEJOa29FVUVaYjA1MGtGQldxVFN3UEs0Zw==");
+                if ($checkingFileData) {
+                    $temp_lfile = json_decode($checkingFileData, true);
+                    return $temp_lfile;
+                }
+            }
+        } else return $temp_lfile;
+        return false;
+    }
+
+    function license_run_check($licenseData = [])
+    {
+        if ($licenseData) {
+            if (isset($licenseData["next-check-time"])) {
+                $now_time   = date("Y-m-d H:i:s");
+                $next_time  = date("Y-m-d H:i:s", strtotime($licenseData["next-check-time"]));
+                $difference = $this->diff_day($next_time, $now_time);
+                if ($difference < 2) {
+                    $now_time   = strtotime(date("Y-m-d H:i:s"));
+                    $next_time  = strtotime($next_time);
+                    if ($next_time > $now_time) return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    function use_license_curl($address, &$error_msg)
+    {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $address);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        $result = @curl_exec($ch);
+        if (curl_errno($ch)) {
+            $error_msg = curl_error($ch);
+            return false;
+        }
+        curl_close($ch);
+        return $result;
     }
 
     public function set_order($order = [])
@@ -340,13 +468,13 @@ class SynergyWholesale
         $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
         $ns = idn_to_ascii($ns, 0, INTL_IDNA_VARIANT_UTS46);
 
-        $addCNS = $this->api->add_child_nameserver($params,$ns,$ip);
-        if(!$addCNS){
+        $addCNS = $this->api->add_child_nameserver($params, $ns, $ip);
+        if (!$addCNS) {
             $this->error = $this->api->error;
             return false;
         }
 
-        return ['ns' => $ns,'ip' => $ip];
+        return ['ns' => $ns, 'ip' => $ip];
     }
 
     public function ModifyCNS($params = [], $old = [], $new_ns = '', $new_ip = '')
@@ -356,8 +484,8 @@ class SynergyWholesale
         $old_ns = idn_to_ascii($old["ns"], 0, INTL_IDNA_VARIANT_UTS46);
         $new_ns = idn_to_ascii($new_ns, 0, INTL_IDNA_VARIANT_UTS46);
 
-        $modify = $this->api->modify_child_nameserver($params,$old_ns,$new_ns,$new_ip);
-        if(!$modify){
+        $modify = $this->api->modify_child_nameserver($params, $old_ns, $new_ns, $new_ip);
+        if (!$modify) {
             $this->error = $this->api->error;
             return false;
         }
@@ -370,8 +498,8 @@ class SynergyWholesale
         $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
         $ns = idn_to_ascii($ns, 0, INTL_IDNA_VARIANT_UTS46);
 
-        $delete     = $this->api->delete_child_nameserver($params,$ns);
-        if(!$delete){
+        $delete     = $this->api->delete_child_nameserver($params, $ns);
+        if (!$delete) {
             $this->error = $this->api->error;
             return false;
         }
@@ -591,7 +719,7 @@ class SynergyWholesale
         $result = [];
 
         $result["creation_time"] = array_key_exists("domain_create", $details) ? DateManager::format("Y-m-d", $details["domain_create"]) : '';
-        if ($result["creation_time"] == '' ) {
+        if ($result["creation_time"] == '') {
             $result["creation_time"] = array_key_exists("createdDate", $details) ? DateManager::format("Y-m-d", $details["createdDate"]) : '';
         }
         $result["end_time"] = array_key_exists("domain_expiry", $details) ? DateManager::format("Y-m-d", $details["domain_expiry"]) : '';
@@ -653,36 +781,37 @@ class SynergyWholesale
 
 
     ///// ---- import
-    public function domains(){
+    public function domains()
+    {
         Helper::Load(["User"]);
 
         $result = [];
 
         $data = $this->api->get_domains();
-        if(!$data && $this->api->error){
+        if (!$data && $this->api->error) {
             $this->error = $this->api->error;
             return $result;
         }
 
-        if($data && is_array($data)){
-            foreach($data AS $res){
-                $cdate      = isset($res->creation_date) ? DateManager::format("Y-m-d",$res->creation_date) : '';
+        if ($data && is_array($data)) {
+            foreach ($data as $res) {
+                $cdate      = isset($res->creation_date) ? DateManager::format("Y-m-d", $res->creation_date) : '';
                 if ($cdate == "") {
-                    $cdate  = isset($res->createdDate) ? DateManager::format("Y-m-d",$res->createdDate) : '';
+                    $cdate  = isset($res->createdDate) ? DateManager::format("Y-m-d", $res->createdDate) : '';
                 }
-                $edate      = isset($res->domain_expiry) ? DateManager::format("Y-m-d",$res->domain_expiry) : '';
+                $edate      = isset($res->domain_expiry) ? DateManager::format("Y-m-d", $res->domain_expiry) : '';
                 $domain     = isset($res->domainName) ? $res->domainName : '';
-                if($domain){
-                    $domain      = idn_to_utf8($domain,0,INTL_IDNA_VARIANT_UTS46);
+                if ($domain) {
+                    $domain      = idn_to_utf8($domain, 0, INTL_IDNA_VARIANT_UTS46);
                     $order_id    = 0;
                     $user_data   = [];
                     $is_imported = Models::$init->db->select("id,owner_id AS user_id")->from("users_products");
-                    $is_imported->where("type",'=',"domain","&&");
-                    $is_imported->where("name",'=',$domain);
+                    $is_imported->where("type", '=', "domain", "&&");
+                    $is_imported->where("name", '=', $domain);
                     $is_imported = $is_imported->build() ? $is_imported->getAssoc() : false;
-                    if($is_imported){
+                    if ($is_imported) {
                         $order_id   = $is_imported["id"];
-                        $user_data  =  User::getData($is_imported["user_id"],"id,full_name,company_name","array");
+                        $user_data  =  User::getData($is_imported["user_id"], "id,full_name,company_name", "array");
                     }
 
                     $result[] = [
