@@ -231,8 +231,18 @@ class SynergyWholesale_API
                 if ('state' === $destination && 'AU' === $params['whois'][$whmcs_contact . 'Country']) {
                     $state = $this->validate_au_state($params['whois'][$whmcs_contact . 'State']);
                     if (!$state) {
-                        $this->error = 'A Valid Australian State Name Must Be Supplied, EG. NSW, VIC';
-                        return false;
+
+                        // The City and State might be swapped let's try again
+                        // WISECP ticket #6709 (counti and city swapped / wrong translation)
+                        $state = $this->validate_au_state($params['whois'][$whmcs_contact . 'City']);
+                        if (!$state) {
+                            $this->error = 'A Valid Australian State Name Must Be Supplied, EG. NSW, VIC';
+                            return false;
+                        } else {
+                            $request[$sw_contact . 'suburb'] = $params['whois'][$whmcs_contact . 'State'];
+                        }
+
+
                     }
 
                     $params['whois'][$whmcs_contact . $source] = $state;
@@ -672,8 +682,17 @@ class SynergyWholesale_API
                 // It is, so check to see if a valid AU State has been specified
                 $state = $this->validate_au_state($params['contactdetails'][$whmcs_contact]['State']);
                 if (!empty($params['contactdetails'][$whmcs_contact]['State']) && !$state) {
-                    $this->error = 'A Valid Australian State Name Must Be Supplied, EG. NSW, VIC';
-                    return false;
+
+                    // The City and State might be swapped let's try again
+                    // WISECP ticket #6709 (counti and city swapped / wrong translation)
+                    $state = $this->validate_au_state($params['contactdetails'][$whmcs_contact]['City']);
+                    if (!empty($params['contactdetails'][$whmcs_contact]['City']) && !$state) {
+                        $this->error = 'A Valid Australian State Name Must Be Supplied, EG. NSW, VIC';
+                        return false;
+                    } else {
+                        $request["{$contactType}_suburb"] = $params['contactdetails'][$whmcs_contact]['State'];
+                    }
+
                 }
 
                 // Yes - store the state
