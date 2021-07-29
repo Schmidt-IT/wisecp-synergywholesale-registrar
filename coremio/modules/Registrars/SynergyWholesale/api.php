@@ -399,10 +399,9 @@ class SynergyWholesale_API
 
         if ($locked == 'locked' && $command == 'unlockDomain' || $locked == 'unlocked' && $command == 'lockDomain') {
             return $this->$this->synergywholesaledomains_api_request($command, $params, [], false);
-        } else {
-            // no change needed
-            return false;
         }
+        $this->error = 'No change necessary';
+        return false;
     }
 
     /**
