@@ -1083,7 +1083,6 @@ class SynergyWholesale_API
         $request['limit'] = $pageSize;
         // $request['status']=('ok', 'clienthold', 'dropped','transferredaway', 'deleted', 'inactive', 'clientTransferProhibited','cilentUpdatedProhibited', 'pendingDelete', 'policyDelete', 'redemption', etc.)
         $response = $this->synergywholesaledomains_api_request('listDomains');
-        // throw new Exception(var_dump_str($response));
 
         if ($response === false) {
             throw new Exception($this->error);

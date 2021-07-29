@@ -550,8 +550,6 @@ class SynergyWholesale
     {
         $params["domainName"] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
         $details = $this->api->get_details($params);
-        // $this->error = var_dump_str($details);
-        return false;
 
         if (!$details) {
             $this->error = $this->api->error;
@@ -568,8 +566,6 @@ class SynergyWholesale
         $params['tld'] = $domain; // TODO
 
         $details    = $this->api->get_registrar_lock($params);
-        // $this->error = var_dump_str($details);
-        return false;
 
         if (!$details) {
             $this->error = $this->api->error;
@@ -584,14 +580,12 @@ class SynergyWholesale
         $params["domainName"] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
         $details = $this->api->get_details($params);
-        // $this->error = var_dump_str($details);
-        return false;
 
         if (!$details) {
             $this->error = $this->api->error;
             return false;
         }
-        return $details["status"] !== "active" ? true : false;
+        return $details["status"] !== "Active" ? true : false;
     }
 
     /**
@@ -609,7 +603,6 @@ class SynergyWholesale
 
         if (!$modify) {
             $this->error = $this->api->error;
-            // throw new \Exception(var_dump_str($this->error));
             return false;
         }
 
@@ -662,7 +655,6 @@ class SynergyWholesale
         $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
         $details = $this->api->get_epp_code($params);
-        // $this->error = var_dump_str($details);
         if (!$details) {
             $this->error = $this->api->error;
             return false;
@@ -696,7 +688,6 @@ class SynergyWholesale
         $details = $this->api->get_details($params);
         if (!$details) {
             $this->error = $this->api->error;
-            throw new \Exception(var_dump_str($this->error));
             return false;
         }
 
