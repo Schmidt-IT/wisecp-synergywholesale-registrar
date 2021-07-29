@@ -2,7 +2,7 @@
 
 This module allows you to manage your Domains with Synergy Wholesale though WISECP.
 
-Copyright (C) Schmidt IT
+![settings](screenshots/settings.png)
 
 **Note: Domain registration for most .AU domains cannot be automated at the moment with the WISECP API since it requires asking for an ABN verification and business type.**
 
@@ -38,3 +38,6 @@ https://dev.wisecp.com/en/kb/create-a-query
 https://dev.wisecp.com/en/kb/cctld-gtld-whois-server
 
 https://synergywholesale.com/faq/article/api-whmcs-modules/
+
+
+Copyright (C) Schmidt IT
