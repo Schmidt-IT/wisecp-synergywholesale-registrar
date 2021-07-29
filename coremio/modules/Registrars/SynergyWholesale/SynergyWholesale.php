@@ -564,6 +564,7 @@ class SynergyWholesale
         $domain = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
         $params['domainName'] = $domain;
         if (!in_array('tld', $params)) {
+            // used to check if the domain supports transfer lock
             $params['tld'] = $domain;
         }
 
