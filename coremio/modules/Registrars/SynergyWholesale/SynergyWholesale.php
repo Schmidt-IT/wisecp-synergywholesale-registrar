@@ -246,17 +246,17 @@ class SynergyWholesale
         $domain = idn_to_ascii($domain, 0, INTL_IDNA_VARIANT_UTS46);
         $sld = idn_to_ascii($sld, 0, INTL_IDNA_VARIANT_UTS46);
 
-        // $whois['adminCompany'] = '' IT';
+        // $whois['adminCompany'] = '';
         // $whois['adminFirstName'] = '';
-        // $whois['adminLastName'] = ''';
+        // $whois['adminLastName'] = '';
         // $whois['adminEmail'] = '';
         // $whois['adminPhone'] = '';
         // $whois['adminAddressLine1'] = '';
         // $whois['adminAddressLine2'] = '';
-        // $whois['adminState'] = 'NSW';
+        // $whois['adminState'] = '';
         // $whois['adminCity'] = '';
         // $whois['adminZipCode'] = '';
-        // $whois['adminCountry'] = 'AU';
+        // $whois['adminCountry'] = '';
         $additional_fields = [];
 
         // // Page 138 / 145
