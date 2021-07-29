@@ -246,6 +246,13 @@ class SynergyWholesale
         $domain = idn_to_ascii($domain, 0, INTL_IDNA_VARIANT_UTS46);
         $sld = idn_to_ascii($sld, 0, INTL_IDNA_VARIANT_UTS46);
 
+        // The City and State might be swapped
+        // WISECP ticket #6709 (counti and city swapped / wrong translation)
+        $state = $whois["City"];
+        $city = $whois["State"];
+        $whois["City"] = $city;
+        $whois["State"] = $state;
+
         // $whois['adminCompany'] = '';
         // $whois['adminFirstName'] = '';
         // $whois['adminLastName'] = '';
@@ -319,6 +326,13 @@ class SynergyWholesale
 
         $domain = idn_to_ascii($domain, 0, INTL_IDNA_VARIANT_UTS46);
         $sld = idn_to_ascii($sld, 0, INTL_IDNA_VARIANT_UTS46);
+
+        // The City and State might be swapped
+        // WISECP ticket #6709 (counti and city swapped / wrong translation)
+        $state = $whois["City"];
+        $city = $whois["State"];
+        $whois["City"] = $city;
+        $whois["State"] = $state;
 
         $params = [
             'domain' => $domain,
