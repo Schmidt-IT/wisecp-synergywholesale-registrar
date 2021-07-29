@@ -21,7 +21,7 @@ function var_dump_str($var) {
 }
 
 function debug($obj) {
-    $file = fopen(getcwd() . "/logfile.html", "a") or die("error writing to write to log");
+    $file = fopen(getcwd() . "/logfile.html", "a") or die("error writing to log file");
     fwrite($file, "<b>" . date("Y-m-d H:i:s") . "</b> " . var_dump_str($obj));
     fclose($file);
 }
