@@ -1,7 +1,33 @@
 # Synergy Wholesale Registrar Module for WISECP
 
- Copyright (C) Schmidt IT
+This module allows you to manage your Domains with Synergy Wholesale though WISECP.
 
+Copyright (C) Schmidt IT
+
+**Note: Domain registration for most .AU domains cannot be automated at the moment with the WISECP API since it requires asking for an ABN verification and business type.**
+
+API Features supported:
+
+* Domain registration
+* Domain transfer
+* Whois modification
+* Whois Privacy
+* Nameserver Configuration
+* Import of Domains already on Synergy Wholesale
+* Automated Import of TLDs
+* EPP Transfer Code
+
+## Server Requirements
+
+* PHP 7.2+
+* cURL PHP Module
+
+## Installation
+
+1. Download the archive to your server
+2. Extract the archive to the root of your WISECP installation
+
+## Developer
 
 ### Dev Guides
 
