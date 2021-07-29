@@ -143,6 +143,10 @@ class SynergyWholesale
 
     function license_run_check($licenseData = [])
     {
+        // skip check when running cron
+        if(defined("CRON") && constant("CRON") === true) {
+            return false;
+        }
         if ($licenseData) {
             if (isset($licenseData["next-check-time"])) {
                 $now_time   = date("Y-m-d H:i:s");
