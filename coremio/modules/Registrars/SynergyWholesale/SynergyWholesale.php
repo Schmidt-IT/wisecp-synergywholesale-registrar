@@ -563,9 +563,11 @@ class SynergyWholesale
     {
         $domain = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
         $params['domainName'] = $domain;
-        $params['tld'] = $domain; // TODO
+        if (!in_array('tld', $params)) {
+            $params['tld'] = $domain;
+        }
 
-        $details    = $this->api->get_registrar_lock($params);
+        $details = $this->api->get_registrar_lock($params);
 
         if (!$details) {
             $this->error = $this->api->error;
@@ -599,7 +601,6 @@ class SynergyWholesale
         $params['domainName'] = idn_to_ascii($params["domain"], 0, INTL_IDNA_VARIANT_UTS46);
 
         $modify = $this->api->save_registrar_lock($params, $status == "enable" ? "lockDomain" : "unlockDomain");
-
 
         if (!$modify) {
             $this->error = $this->api->error;
