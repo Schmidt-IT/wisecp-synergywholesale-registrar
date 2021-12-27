@@ -8,10 +8,6 @@
  * @license https://github.com/wisecp/sample-registrar-module/blob/master/LICENSE
  * Source: https://github.com/wisecp/sample-registrar-module/blob/master/coremio/modules/Registrars/ExampleRegistrarModule/ExampleRegistrarModule.php
  */
-
-if (!function_exists('curl_init') or !function_exists('curl_exec') or !function_exists('curl_setopt'))
-    die('PHP Curl Library not found');
-
 static $temp_lfile;
 
 class SynergyWholesale
