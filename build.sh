@@ -5,7 +5,6 @@ zip -r wisecp-synergywholesale-registrar-module.zip . \
     -x docs/\* \
     -x .vscode/\* \
     -x screenshots/\* \
-    -x license-error.html \
     -x logo.jpg \
     -x .gitignore \
     -x .gitattributes \
