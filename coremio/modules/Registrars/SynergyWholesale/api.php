@@ -13,19 +13,6 @@ define('API_ENDPOINT', 'https://api.synergywholesale.com/');
 // define('FRONTEND', 'https://manage.synergywholesale.com');
 // define('WHOIS_URL', 'https://manage.synergywholesale.com/home/whmcs-whois-json');
 
-function var_dump_str($var) {
-    ob_start();
-    var_dump($var);
-    $result = ob_get_clean();
-    return "<pre>" . $result . "</pre><br>";
-}
-
-function debug($obj) {
-    $file = fopen(getcwd() . "/logfile.html", "a") or die("error writing to log file");
-    fwrite($file, "<b>" . date("Y-m-d H:i:s") . "</b> " . var_dump_str($obj));
-    fclose($file);
-}
-
 function strlen_check(array $matches, int $subpattern_num, int $i) {
     $num_matches = count($matches);
     if ($num_matches == 0 || $num_matches < $subpattern_num) {
@@ -45,7 +32,6 @@ class SynergyWholesale_API
     private $resellerID     = NULL;
     private $apiKey         = NULL;
     public  $error          = NULL;
-    private $curl           = false;
     private $_params        = [];
 
     function __construct($resellerID = '', $apiKey = '', $test_mode = false)
@@ -53,13 +39,6 @@ class SynergyWholesale_API
         $this->test_mode    = $test_mode;
         $this->resellerID   = $resellerID;
         $this->apiKey       = $apiKey;
-        $this->curl         = curl_init();
-        curl_setopt($this->curl, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)');
-        curl_setopt($this->curl, CURLOPT_ENCODING, "gzip");
-        curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($this->curl, CURLOPT_TIMEOUT, 300);
-        curl_setopt($this->curl, CURLOPT_HEADER, 0);
-        curl_setopt($this->curl, CURLOPT_HTTPHEADER, array("Content-Type: text/xml; charset=UTF-8"));
     }
 
     function helper_get_domain(array $params)
